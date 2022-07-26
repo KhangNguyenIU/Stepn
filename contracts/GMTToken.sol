@@ -514,10 +514,10 @@ contract GMTToken is Context, IBEP20, Ownable {
     return true;
   }
 
-//   function mint(address _to, uint256 amount) public  onlyOwner  returns (bool) {
-//     _mint(_to, amount);
-//     return true;
-//   }
+  function mintTo(address recipient, uint256 amount) public  onlyOwner  returns (bool) {
+    _mint(recipient, amount);
+    return true;
+  }
 
   /**
    * @dev Moves tokens `amount` from `sender` to `recipient`.

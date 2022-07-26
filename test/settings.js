@@ -43,7 +43,26 @@ const settings ={
             mintCount: '0',
             mintFrom: 2,
             isEarningGMT: false,
+            decimal: 8,
             levelingPrice: '1000000000000000000'
+        }
+    },
+    update :{
+        decay:{
+            durability: 4,
+            hp :5,
+            exceedDurability:100,
+            exceedHP:100,
+            repairPrice: '90000000000000000'
+        }
+    },
+    gem:{
+        newGem:{
+            id:'1',
+            level:'1',
+            attribute :[0,1,2,3],
+            baseAttribute: 3,
+            effectAttribute: 6
         }
     }
 }
