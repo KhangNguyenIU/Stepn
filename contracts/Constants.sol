@@ -2,23 +2,22 @@
 
 pragma solidity ^0.8.2;
 
-
-library Constants{
-    enum Quality{
+library Constants {
+    enum Quality {
         Common,
         Uncommon,
         Rare,
         Epic,
         Legendary
     }
-    enum SneakerType{
+    enum SneakerType {
         Walker,
-        Runner,
         Jogger,
+        Runner,
         Trainer
     }
 
-    enum Attributes{
+    enum Attributes {
         Efficiency,
         Luck,
         Comfort,
@@ -33,4 +32,8 @@ library Constants{
     uint256 constant LEVELING_PRICE = 1000000000000000000;
 
     uint256 constant REPAIR_PRICE = 10000000000000000;
+    uint256 constant COMBINE_PRICE = 1000000000000000000;
+    uint256 constant EQUIP_GEM_PRICE = 1000000000000000000;
+
+    uint256 constant MAX_MINT_COUNT = 7;
 }

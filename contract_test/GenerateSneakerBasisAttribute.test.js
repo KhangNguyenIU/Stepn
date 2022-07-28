@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require('hardhat')
-const {settings} = require('./settings')
+const {settings} = require('../test/settings')
 
 // describe("Generate Sneaker stat", function () {
 //     let randomGenerator

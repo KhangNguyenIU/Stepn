@@ -10,30 +10,38 @@ import "./Constants.sol";
 import "./IBEP20.sol";
 import "hardhat/console.sol";
 
+interface IGem {
+    struct Gem {
+        uint256 id;
+        uint8 level;
+        address owner;
+        Constants.Attributes attribute;
+        uint16 baseAttribute;
+        uint16 effectAttribute;
+    }
+
+    function getGem(uint256 _tokenId) external view returns (Gem memory);
+
+    function getGemOwner(uint256 _tokenId) external view returns (address);
+}
+
 contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
     using Constants for Constants.Quality;
     using Constants for Constants.SneakerType;
-
+    using Constants for Constants.Attributes;
     using SafeMath for uint256;
 
     IBEP20 internal _GSTToken;
     IBEP20 internal _GMTToken;
-
+    IGem internal _gem;
     uint256 idCounter;
 
-    uint8 private decimal =10;
-    constructor(
-        address _iRandom,
-        address _gstToken,
-        address _gmtToken
-    ) ERC721("SNEAKER", "SNK") GenerateSneakerBasisAttribute(_iRandom) {
-        require(_gstToken != address(0), "GSTToken address is not valid");
-        require(_gmtToken != address(0), "GMTToken address is not valid");
-        require(_iRandom != address(0), "iRandom address is not valid");
-        _GSTToken = IBEP20(_gstToken);
-        _GMTToken = IBEP20(_gmtToken);
-        editAuthority(_msgSender(), true);
-    }
+    uint8 private decimal = 10;
+
+    constructor(address _iRandom)
+        ERC721("SNEAKER", "SNK")
+        GenerateSneakerBasisAttribute(_iRandom)
+    {}
 
     struct SneakerAttributes {
         uint256 efficiency;
@@ -53,14 +61,19 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         Constants.Quality quality;
         Constants.SneakerType sneakerType;
         uint8 mintCount;
-        uint8[] mintFrom;
+        uint256[] mintFrom;
         bool isEarningGMT;
         uint256 coolingTime;
         uint256[] sockets;
     }
 
-    mapping(uint256 => Sneaker) allSneakers_;
+    struct QualityNType{
+        Constants.Quality quality;
+        Constants.SneakerType sneakerType;
+    }
 
+    mapping(uint256 => Sneaker) allSneakers_;
+    mapping(address => bool) authorities_;
     //MODIFIER
     modifier onlySneakerOwner(uint256 tokenId) {
         require(
@@ -76,12 +89,38 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
     event Leveling(uint256 tokenId, address _owner, uint8 level);
     event SneakerDecay(uint256 tokenId, uint8 durabilityDecay, uint8 hpDecay);
     event RepairSneaker(address _owner, uint256 tokenId, uint256 cost);
+    event TransferSneaker(address _from, address _to, uint256 tokenId);
+
+    function initialize(
+        address _gstToken,
+        address _gmtToken,
+        address _igem,
+        address _iShoeBox
+    ) external onlyOwner {
+        require(
+            _gstToken != address(0) &&
+                _gmtToken != address(0) &&
+                _igem != address(0),
+            "address 0x is not valid"
+        );
+        _GSTToken = IBEP20(_gstToken);
+        _GMTToken = IBEP20(_gmtToken);
+        _gem = IGem(_igem);
+
+        authorities_[_igem] = true;
+        authorities_[_iShoeBox] = true;
+    }
 
     function mint(
         address _sender,
         Constants.Quality _quality,
-        Constants.SneakerType _type
-    ) external checkAuthority {
+        Constants.SneakerType _type,
+        uint256[] memory mintFrom
+    ) external {
+        require(
+            _msgSender() == owner() || authorities_[_msgSender()],
+            "SneakerNFT: Unauthorized to mint Sneakers"
+        );
         (
             uint16 efficiency,
             uint16 luck,
@@ -90,10 +129,10 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         ) = generateStats(_quality);
 
         SneakerAttributes memory attributes = SneakerAttributes(
-            uint256(efficiency)*10**decimal,
-            uint256(luck)*10**decimal,
-            uint256(comfort)*10**decimal,
-            uint256(resilience)*10**decimal
+            uint256(efficiency) * 10**decimal,
+            uint256(luck) * 10**decimal,
+            uint256(comfort) * 10**decimal,
+            uint256(resilience) * 10**decimal
         );
 
         (uint8 minSpeed, uint8 maxSpeed) = getSpeedFromType(_type);
@@ -109,7 +148,7 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
             _quality,
             _type,
             0,
-            new uint8[](2),
+            mintFrom,
             false,
             0,
             new uint256[](4)
@@ -128,6 +167,7 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
     ) external {
         Sneaker storage sneaker = allSneakers_[_tokenId];
         transferFrom(_from, _to, _tokenId);
+        emit TransferSneaker(_from, _to, _tokenId);
         sneaker.owner = _to;
         allSneakers_[_tokenId] = sneaker;
     }
@@ -141,7 +181,7 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
     }
 
     function getOwnerOfSneaker(uint256 _tokenId)
-        public
+        external
         view
         returns (address owner)
     {
@@ -191,6 +231,18 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         emit Leveling(_tokenId, _msgSender(), allSneakers_[_tokenId].level);
     }
 
+    function updateMintCount(uint256 _tokenId) external {
+        require(
+            _msgSender() == owner() || authorities_[_msgSender()],
+            "SneakerNFT: Unauthorized to update mint count"
+        );
+        require(
+            allSneakers_[_tokenId].mintCount < Constants.MAX_MINT_COUNT,
+            "SneakerNFT: Max mint count reached"
+        );
+        allSneakers_[_tokenId].mintCount++;
+    }
+
     function decaySneaker(
         uint256 _tokenId,
         uint8 _durabilityDecay,
@@ -230,21 +282,123 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         uint256 _gemId,
         uint8 _socketSlot
     ) external onlySneakerOwner(_tokenId) {
+        require(
+            _gem.getGemOwner(_gemId) == _msgSender(),
+            "SneakerNFT: You don't own this gem"
+        );
+
         Sneaker storage sneaker = allSneakers_[_tokenId];
-        if(_socketSlot == 0){
-            require(sneaker.level == 5, "SneakerNFT: Sneaker must be level 5 to use socket 1");
+        if (_socketSlot == 0) {
+            require(
+                sneaker.level >= 5,
+                "SneakerNFT: Sneaker must be level 5 to use socket 1"
+            );
         }
-        if(_socketSlot ==1){
-            require(sneaker.level == 10, "SneakerNFT: Sneaker must be level 10 to use socket 2");
+        if (_socketSlot == 1) {
+            require(
+                sneaker.level >= 10,
+                "SneakerNFT: Sneaker must be level 10 to use socket 2"
+            );
         }
-        if(_socketSlot ==2){
-            require(sneaker.level == 15, "SneakerNFT: Sneaker must be level 15 to use socket 3");
+        if (_socketSlot == 2) {
+            require(
+                sneaker.level >= 15,
+                "SneakerNFT: Sneaker must be level 15 to use socket 3"
+            );
         }
-        if(_socketSlot ==3){
-            require(sneaker.level == 20, "SneakerNFT: Sneaker must be level 20 to use socket 4");
+        if (_socketSlot == 3) {
+            require(
+                sneaker.level >= 20,
+                "SneakerNFT: Sneaker must be level 20 to use socket 4"
+            );
+        }
+
+        _GSTToken.transferFrom(
+            _msgSender(),
+            address(this),
+            Constants.EQUIP_GEM_PRICE
+        );
+        //remove the extra attribute from old gem
+        if (sneaker.sockets[_socketSlot] != 0) {
+            require(
+                sneaker.sockets[_socketSlot] != _gemId,
+                "SneakerNFT: Gem is already equipped"
+            );
+            Constants.Attributes oldAttribute = _gem
+                .getGem(sneaker.sockets[_socketSlot])
+                .attribute;
+            uint256 extraEffect = _gem
+                .getGem(sneaker.sockets[_socketSlot])
+                .effectAttribute;
+            uint256 extraAttribute = _gem
+                .getGem(sneaker.sockets[_socketSlot])
+                .baseAttribute;
+            if (oldAttribute == Constants.Attributes.Efficiency) {
+                sneaker.attributes.efficiency -= extraAttribute * 10**decimal;
+            }
+            if (oldAttribute == Constants.Attributes.Resilience) {
+                sneaker.attributes.resilience -= extraAttribute * 10**decimal;
+            }
+            if (oldAttribute == Constants.Attributes.Luck) {
+                sneaker.attributes.luck -= extraAttribute * 10**decimal;
+            }
+            if (oldAttribute == Constants.Attributes.Comfort) {
+                sneaker.attributes.comfort -= extraAttribute * 10**decimal;
+            }
+
+            sneaker.attributes.efficiency =
+                (sneaker.attributes.efficiency * 100) /
+                (100 + extraEffect);
+            sneaker.attributes.resilience =
+                (sneaker.attributes.resilience * 100) /
+                (100 + extraEffect);
+            sneaker.attributes.luck =
+                (sneaker.attributes.luck * 100) /
+                (100 + extraEffect);
+            sneaker.attributes.comfort =
+                (sneaker.attributes.comfort * 100) /
+                (100 + extraEffect);
+        }
+
+        //add the new attribute to new gem
+        Constants.Attributes attributeType = _gem.getGem(_gemId).attribute;
+        uint256 newEffect = _gem.getGem(_gemId).effectAttribute;
+        uint256 newAttribute = _gem.getGem(_gemId).baseAttribute;
+
+        sneaker.attributes.efficiency =
+            (sneaker.attributes.efficiency * (100 + newEffect)) /
+            100;
+        sneaker.attributes.resilience =
+            (sneaker.attributes.resilience * (100 + newEffect)) /
+            100;
+        sneaker.attributes.luck =
+            (sneaker.attributes.luck * (100 + newEffect)) /
+            100;
+        sneaker.attributes.comfort =
+            (sneaker.attributes.comfort * (100 + newEffect)) /
+            100;
+
+        if (attributeType == Constants.Attributes.Efficiency) {
+            sneaker.attributes.efficiency += newAttribute * 10**decimal;
+        }
+        if (attributeType == Constants.Attributes.Resilience) {
+            sneaker.attributes.resilience += newAttribute * 10**decimal;
+        }
+        if (attributeType == Constants.Attributes.Luck) {
+            sneaker.attributes.luck += newAttribute * 10**decimal;
+        }
+        if (attributeType == Constants.Attributes.Comfort) {
+            sneaker.attributes.comfort += newAttribute * 10**decimal;
         }
 
         sneaker.sockets[_socketSlot] = _gemId;
+    }
+
+    function getQualityNType (uint256 _tokenId) external view returns(QualityNType memory result){
+        result = QualityNType(
+            allSneakers_[_tokenId].quality,
+            allSneakers_[_tokenId].sneakerType
+        );
     }
 
     function updateDecimal(uint8 _decimal) private {
@@ -255,4 +409,7 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         return decimal;
     }
 
+    function getIdCounter() public view returns (uint256) {
+        return idCounter;
+    }
 }

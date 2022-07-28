@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "test": "npx hardhat test",
+    "test:bsc":"npx hardhat test --network bsc_testnet",
     "compile": "npx hardhat compile",
     "deploy:local": "npx hardhat run scripts/deploy.js"
   },
