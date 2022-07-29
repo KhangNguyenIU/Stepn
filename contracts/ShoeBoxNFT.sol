@@ -5,11 +5,23 @@ pragma solidity ^0.8.2;
 import "./Constants.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 
 interface IRandom {
     function getRandomNumber(uint16 _min, uint16 _max)
         external
         returns (uint256);
+}
+
+interface IMintingScrollNFT {
+    function burnScroll(uint256 _tokenId) external;
+
+    function getOnwerOfScroll(uint256 _tokenId) external view returns (address);
+
+    function getQualityOfScroll(uint256 _tokenId)
+        external
+        view
+        returns (Constants.Quality);
 }
 
 interface ISneaker {
@@ -41,8 +53,11 @@ interface ISneaker {
 contract ShoeBoxNFT is ERC721, Ownable {
     using Constants for Constants.Quality;
     using Constants for Constants.SneakerType;
+
     IRandom iRandom;
     ISneaker iSneaker;
+    IMintingScrollNFT iMintingScroll;
+
     uint256 idCounter;
 
     struct ShoeBox {
@@ -59,11 +74,16 @@ contract ShoeBoxNFT is ERC721, Ownable {
     mapping(Constants.Quality => uint8[]) qualityProbability_;
     mapping(Constants.SneakerType => mapping(Constants.SneakerType => uint8[])) typeProbability_;
 
-    constructor(address _iRandom, address _iSneaker) ERC721("Shoe Box", "SBX") {
+    constructor(
+        address _iRandom,
+        address _iSneaker,
+        address _iMintingScroll
+    ) ERC721("Shoe Box", "SBX") {
         idCounter = 1;
         require(_iRandom != address(0), "iRandom address is not valid");
         iRandom = IRandom(_iRandom);
         iSneaker = ISneaker(_iSneaker);
+        iMintingScroll = IMintingScrollNFT(_iMintingScroll);
         _setCombinationProbabilities();
         _setQualityProbabilities();
         _setTypeProbabilities();
@@ -82,11 +102,22 @@ contract ShoeBoxNFT is ERC721, Ownable {
 
     event OpenShoeBox(address owner, uint256 id);
 
-    function mint(uint256 _sneakerId1, uint256 _sneakerId2) external {
+    function mint(
+        uint256 _sneakerId1,
+        uint256 _sneakerId2,
+        uint256 _mintingScrollId1,
+        uint256 _mintingScrollId2
+    ) external {
         require(
             _sneakerId1 != _sneakerId2,
             "ShoeBoxNFT: cannot mint 2 same sneakers"
         );
+
+        require(
+            _mintingScrollId1 != _mintingScrollId2,
+            "ShoeBoxNFT: cannot mint 2 same minting scrolls"
+        );
+
         // require user own 2 sneakers
         require(
             iSneaker.getOwnerOfSneaker(_sneakerId1) == msg.sender &&
@@ -94,9 +125,22 @@ contract ShoeBoxNFT is ERC721, Ownable {
             "ShoeBoxNFT: Only sneaker owner can mint ShoeBox"
         );
 
-        //update mints count of 2 sneakers
-        iSneaker.updateMintCount(_sneakerId1);
-        iSneaker.updateMintCount(_sneakerId2);
+        //require user own 2 minting scrolls
+        require(
+            (iMintingScroll.getOnwerOfScroll(_mintingScrollId1) ==
+                msg.sender) &&
+                (iMintingScroll.getOnwerOfScroll(_mintingScrollId2) ==
+                    msg.sender),
+            "ShoeBoxNFT: Only minting scroll owner can mint ShoeBox.."
+        );
+
+        // get quality of 2 scroll
+        Constants.Quality scroll1Quality = iMintingScroll.getQualityOfScroll(
+            _mintingScrollId1
+        );
+        Constants.Quality scroll2Quality = iMintingScroll.getQualityOfScroll(
+            _mintingScrollId2
+        );
 
         // get Quality and Type of 2 sneakers
         ISneaker.QualityNType memory qualityAValue1 = iSneaker.getQualityNType(
@@ -104,6 +148,15 @@ contract ShoeBoxNFT is ERC721, Ownable {
         );
         ISneaker.QualityNType memory qualityAValue2 = iSneaker.getQualityNType(
             _sneakerId2
+        );
+
+        // require 2 minting scrolls have same quality with the sneakers
+        require(
+            (scroll1Quality == qualityAValue1.quality ||
+                scroll1Quality == qualityAValue2.quality) &&
+                (scroll2Quality == qualityAValue1.quality ||
+                    scroll2Quality == qualityAValue2.quality),
+            "ShoeBoxNFT: 2 minting scrolls have different quality with the sneakers"
         );
 
         //get random quality and type of new sneaker
@@ -127,9 +180,14 @@ contract ShoeBoxNFT is ERC721, Ownable {
             randomQuality,
             randomType
         );
-        allShoeBox_[idCounter] = shoeBox;
 
         _safeMint(_msgSender(), idCounter);
+        allShoeBox_[idCounter] = shoeBox;
+
+        //update mints count of 2 sneakers
+        iSneaker.updateMintCount(_sneakerId1);
+        iSneaker.updateMintCount(_sneakerId2);
+
         emit MintShoeBox(_msgSender(), idCounter, randomQuality);
         idCounter++;
     }

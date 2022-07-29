@@ -7,7 +7,7 @@ const { Bignumber2String, sleep } = require('../utils/index')
 
 
 describe("Shoe Box", function () {
-    let shoeBoxInstance, gemInstance, mysteryBoxInstance, randomInstance, GSTTokenInstance, GMTTokenInstance, sneakerInstance;
+    let shoeBoxInstance, gemInstance, mysteryBoxInstance, randomInstance, GSTTokenInstance, GMTTokenInstance, sneakerInstance, mintingScrollInstance;
     let owner, user1, user2
     beforeEach(async () => {
         [owner, user1, user2] = await ethers.getSigners()
@@ -30,10 +30,15 @@ describe("Shoe Box", function () {
 
         const Sneaker = await ethers.getContractFactory('SneakerNFT');
         sneakerInstance = await Sneaker.deploy(randomInstance.address);
-        await sneakerInstance.deployed(randomInstance.address);
+        await sneakerInstance.deployed();
+
+        const MintingScroll = await ethers.getContractFactory('MintingScrollNFT');
+        mintingScrollInstance = await MintingScroll.deploy(randomInstance.address);
+        // await mintingScrollInstance.deployed();
+
 
         const ShoeBox = await ethers.getContractFactory('ShoeBoxNFT')
-        shoeBoxInstance = await ShoeBox.deploy(randomInstance.address, sneakerInstance.address);
+        shoeBoxInstance = await ShoeBox.deploy(randomInstance.address, sneakerInstance.address, mintingScrollInstance.address);
         await shoeBoxInstance.deployed()
 
         await sneakerInstance.connect(owner).initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, shoeBoxInstance.address);
@@ -50,19 +55,29 @@ describe("Shoe Box", function () {
             await sneakerInstance.connect(owner).mint(user1.address, settings.shoeBox.quality1, settings.shoeBox.sneakerType1, [0, 0]);
 
             await sneakerInstance.connect(owner).mint(user1.address, settings.shoeBox.quality2, settings.shoeBox.sneakerType2, [0, 0]);
+
+            // await mintingScrollInstance.connect(owner).mint()
+            await mintingScrollInstance.connect(owner).mintScroll(user1.address);
+            await mintingScrollInstance.connect(owner).mintScroll(user1.address);
+
+
         })
 
         it("Should revert it sender is not the owner of the sneaker", async () => {
 
-            await expect(shoeBoxInstance.connect(user2).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).to.be.revertedWith("ShoeBoxNFT: Only sneaker owner can mint ShoeBox")
+            await expect(shoeBoxInstance.connect(user2).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).to.be.revertedWith("ShoeBoxNFT: Only sneaker owner can mint ShoeBox")
         })
 
         it("Should revert if mint 2 identical sneaker", async () => {
-            await expect(shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker1)).to.be.revertedWith("ShoeBoxNFT: cannot mint 2 same sneakers")
+            await expect(shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker1, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).to.be.revertedWith("ShoeBoxNFT: cannot mint 2 same sneakers")
+        })
+
+        it("should revert if 2 scroll are identical", async ()=>{
+            await expect(shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll1)).to.be.revertedWith("ShoeBoxNFT: cannot mint 2 same minting scrolls")
         })
 
         it("should mint success", async () => {
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
 
             const newShoeBox = await shoeBoxInstance.getShoeBox(1)
             expect(Bignumber2String(newShoeBox.id)).to.be.equal('1')
@@ -81,15 +96,15 @@ describe("Shoe Box", function () {
 
         it("Should revert if excess mintCount", async () => {
 
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
 
-            await expect(shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).to.be.revertedWith("SneakerNFT: Max mint count reached")
+            await expect(shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).to.be.revertedWith("SneakerNFT: Max mint count reached")
 
         })
     })
@@ -100,7 +115,9 @@ describe("Shoe Box", function () {
             await sneakerInstance.connect(owner).mint(user1.address, settings.shoeBox.quality1, settings.shoeBox.sneakerType1, [0, 0]);
 
             await sneakerInstance.connect(owner).mint(user1.address, settings.shoeBox.quality2, settings.shoeBox.sneakerType2, [0, 0]);
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
+            await mintingScrollInstance.connect(owner).mintScroll(user1.address);
+            await mintingScrollInstance.connect(owner).mintScroll(user1.address);
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
         })
 
         it("revert if the sender is not the owner of the box", async () => {
@@ -113,10 +130,10 @@ describe("Shoe Box", function () {
             await (await shoeBoxInstance.connect(user1).open(1)).wait()
 
             let newSneaker = await sneakerInstance.getSneaker(settings.shoeBox.newSneaker)
-            
+
             expect(newSneaker.owner).to.be.equal(user1.address)
             expect(newSneaker.mintCount).to.be.equal(0)
-        
+
 
             // test if the shoe box has been burnt
             shoeBox = await shoeBoxInstance.getShoeBox(1)
@@ -125,20 +142,22 @@ describe("Shoe Box", function () {
         })
     })
 
-    describe("Transfer shoe box", function(){
+    describe("Transfer shoe box", function () {
         beforeEach(async () => {
             await sneakerInstance.connect(owner).mint(user1.address, settings.shoeBox.quality1, settings.shoeBox.sneakerType1, [0, 0]);
 
             await sneakerInstance.connect(owner).mint(user1.address, settings.shoeBox.quality2, settings.shoeBox.sneakerType2, [0, 0]);
-            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2)).wait()
+            await mintingScrollInstance.connect(owner).mintScroll(user1.address);
+            await mintingScrollInstance.connect(owner).mintScroll(user1.address);
+            await (await shoeBoxInstance.connect(user1).mint(settings.shoeBox.sneaker1, settings.shoeBox.sneaker2, settings.shoeBox.scroll1, settings.shoeBox.scroll2)).wait()
         })
 
-        it("should revert if the sender not approve", async ()=>{
-            await expect(shoeBoxInstance.connect(owner).transferShoeBox(user1.address, user2.address,1)).to.be.revertedWith("ERC721: caller is not token owner nor approved")
+        it("should revert if the sender not approve", async () => {
+            await expect(shoeBoxInstance.connect(owner).transferShoeBox(user1.address, user2.address, 1)).to.be.revertedWith("ERC721: caller is not token owner nor approved")
         })
-        it("should transfer shoe box success", async ()=>{
+        it("should transfer shoe box success", async () => {
             await shoeBoxInstance.connect(user1).setApprovalForAll(owner.address, true)
-            await (await shoeBoxInstance.connect(user1).transferShoeBox(user1.address, user2.address,1)).wait()
+            await (await shoeBoxInstance.connect(user1).transferShoeBox(user1.address, user2.address, 1)).wait()
 
             const shoeBox = await shoeBoxInstance.getShoeBox(1)
             expect(shoeBox.owner).to.be.equal(user2.address)

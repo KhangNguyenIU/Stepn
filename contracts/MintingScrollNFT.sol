@@ -43,28 +43,31 @@ contract MintingScrollNFT is ERC721, Ownable {
         uint256 tokenId
     );
 
-    function mintScroll (address _to) external onlyOwner{
-        Scroll memory scroll = Scroll(
-            idCounter,
-            _getRanDomQuality(),
-            _to
-        );
+    function mintScroll(address _to) external onlyOwner {
+        Scroll memory scroll = Scroll(idCounter, _getRanDomQuality(), _to);
         allScroll_[idCounter] = scroll;
         _safeMint(_to, idCounter);
         emit MintScroll(_to, idCounter, scroll.quality);
         idCounter++;
-    }   
-    function transferScroll(address _from ,address _to, uint256 _tokenId) external {
+    }
+
+    function transferScroll(
+        address _from,
+        address _to,
+        uint256 _tokenId
+    ) external {
         allScroll_[_tokenId].owner = _to;
         transferFrom(_from, _to, _tokenId);
         emit TransferScroll(_from, _to, _tokenId);
     }
 
-    function _getRanDomQuality() private returns (Constants.Quality) {
+    function _getRanDomQuality() private  returns (Constants.Quality) {
         return Constants.Quality(iRandom.getRandomNumber(0, 4));
+        // return Constants.Quality(1);
     }
-    
-    function burnScroll(uint256 _tokenId) external onlyOwner {
+
+    function burnScroll(uint256 _tokenId) external {
+        require(_msgSender() == owner(), "Ownable: caller is not the owner");
         _burn(_tokenId);
         emit BurnScroll(msg.sender, _tokenId);
         delete allScroll_[_tokenId];
@@ -72,5 +75,13 @@ contract MintingScrollNFT is ERC721, Ownable {
 
     function getScroll(uint256 _tokenId) external view returns (Scroll memory) {
         return allScroll_[_tokenId];
+    }
+
+    function getQualityOfScroll(uint256 _tokenId) external view returns (Constants.Quality) {
+        return allScroll_[_tokenId].quality;
+    }
+
+    function getOnwerOfScroll(uint256 _tokenId) external view returns (address) {
+        return allScroll_[_tokenId].owner;
     }
 }
