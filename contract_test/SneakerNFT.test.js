@@ -7,7 +7,7 @@ const { Bignumber2String } = require('../utils/index')
 
 describe("Sneaker NFT", function () {
     let sneakerInstance, GSTTokenInstance, GMTTokenInstance, randomInstance,
-        gemInstance, authorityInstance, mysteryBoxInstance, shoeBoxInstance;
+        gemInstance, mysteryBoxInstance, shoeBoxInstance;
 
     let owner, user1, user2, user3;
     let mintSneakerTx;

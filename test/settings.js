@@ -89,10 +89,12 @@ const settings = {
         sneaker1: 0,
         sneaker2: 1,
         quality1: 1,
-        quality2: 2,
+        quality2: 1,
+        scroll1:1,
+        scroll2:2,
         sneakerType1:1,
         sneakerType2:2,
-        proba : [0,49,50,1,0],
+        proba : [0,98,2,0,0],
         newSneaker:2,
         mintFrom: ['0', '1']
     }
