@@ -1,10 +1,9 @@
 //SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.2;
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IBEP20.sol";
-import "hardhat/console.sol";
 import "./Constants.sol";
 
 interface IRandom {
@@ -13,7 +12,7 @@ interface IRandom {
         returns (uint256);
 }
 
-contract GemNFT is ERC721, Ownable {
+contract GemNFT is ERC721Enumerable, Ownable {
     using Constants for Constants.Attributes;
 
     IBEP20 private _GSTToken;

@@ -36,4 +36,6 @@ library Constants {
     uint256 constant EQUIP_GEM_PRICE = 1000000000000000000;
 
     uint256 constant MAX_MINT_COUNT = 7;
+
+    uint256 constant MAX_ENERGY =20;
 }

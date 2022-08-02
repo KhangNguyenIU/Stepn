@@ -2,13 +2,21 @@
 
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./Authority.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./GenerateSneakerBasisAttribute.sol";
 import "./Constants.sol";
 import "./IBEP20.sol";
-import "hardhat/console.sol";
+
+interface IMove2Earn {
+    function updateUserMaxEnergy(address _user) external;
+
+    function getUserEnergy(address _user)
+        external
+        view
+        returns (uint8 energy, uint8 maxEnergy);
+}
 
 interface IGem {
     struct Gem {
@@ -25,15 +33,16 @@ interface IGem {
     function getGemOwner(uint256 _tokenId) external view returns (address);
 }
 
-contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
+contract SneakerNFT is ERC721Enumerable, GenerateSneakerBasisAttribute, Ownable {
     using Constants for Constants.Quality;
     using Constants for Constants.SneakerType;
     using Constants for Constants.Attributes;
     using SafeMath for uint256;
 
-    IBEP20 internal _GSTToken;
-    IBEP20 internal _GMTToken;
-    IGem internal _gem;
+    IBEP20  _GSTToken;
+    IBEP20  _GMTToken;
+    IGem  _gem;
+    IMove2Earn  _move2Earn;
     uint256 idCounter;
 
     uint8 private decimal = 10;
@@ -67,13 +76,14 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         uint256[] sockets;
     }
 
-    struct QualityNType{
+    struct QualityNType {
         Constants.Quality quality;
         Constants.SneakerType sneakerType;
     }
 
     mapping(uint256 => Sneaker) allSneakers_;
     mapping(address => bool) authorities_;
+
     //MODIFIER
     modifier onlySneakerOwner(uint256 tokenId) {
         require(
@@ -95,7 +105,8 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         address _gstToken,
         address _gmtToken,
         address _igem,
-        address _iShoeBox
+        address _iShoeBox,
+        address _iMove2Earn
     ) external onlyOwner {
         require(
             _gstToken != address(0) &&
@@ -106,9 +117,10 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         _GSTToken = IBEP20(_gstToken);
         _GMTToken = IBEP20(_gmtToken);
         _gem = IGem(_igem);
-
+        _move2Earn = IMove2Earn(_iMove2Earn);
         authorities_[_igem] = true;
         authorities_[_iShoeBox] = true;
+        authorities_[_iMove2Earn] = true;
     }
 
     function mint(
@@ -157,6 +169,8 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         allSneakers_[idCounter] = sneaker;
         _safeMint(_sender, idCounter);
         emit MintSneaker(idCounter, _sender, sneaker);
+
+        _move2Earn.updateUserMaxEnergy(_sender);
         idCounter++;
     }
 
@@ -172,8 +186,21 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         allSneakers_[_tokenId] = sneaker;
     }
 
+    function userReward (address _user, uint256 _GSTTokenAmount, uint256 _GMTTokenAmount) external {
+        require(
+            _msgSender() == owner() || authorities_[_msgSender()],
+            "SneakerNFT: Unauthorized to mint Sneakers"
+        );
+        if(_GSTTokenAmount > 0) {
+            _GSTToken.transfer(_user, _GSTTokenAmount);
+        }
+        if(_GMTTokenAmount > 0) {
+            _GMTToken.transfer(_user, _GMTTokenAmount);
+        }
+    }
+
     function getSneaker(uint256 _tokenId)
-        public
+        external
         view
         returns (Sneaker memory sneaker)
     {
@@ -228,6 +255,9 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
             Constants.LEVELING_PRICE
         );
         allSneakers_[_tokenId].level++;
+        if(allSneakers_[_tokenId].level == Constants.MAX_LEVEL) {
+            allSneakers_[_tokenId].isEarningGMT = true;
+        }
         emit Leveling(_tokenId, _msgSender(), allSneakers_[_tokenId].level);
     }
 
@@ -247,7 +277,12 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         uint256 _tokenId,
         uint8 _durabilityDecay,
         uint8 hpDecay
-    ) external checkAuthority {
+    ) external  {
+        require(
+            _msgSender() == owner() || authorities_[_msgSender()],
+            "SneakerNFT: Unauthorized to decay Sneaker"
+        );
+        
         require(
             allSneakers_[_tokenId].durability > _durabilityDecay,
             "SneakerNFT: Durability is too low"
@@ -394,7 +429,11 @@ contract SneakerNFT is ERC721, Authority, GenerateSneakerBasisAttribute {
         sneaker.sockets[_socketSlot] = _gemId;
     }
 
-    function getQualityNType (uint256 _tokenId) external view returns(QualityNType memory result){
+    function getQualityNType(uint256 _tokenId)
+        external
+        view
+        returns (QualityNType memory result)
+    {
         result = QualityNType(
             allSneakers_[_tokenId].quality,
             allSneakers_[_tokenId].sneakerType

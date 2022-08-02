@@ -7,7 +7,7 @@ const { Bignumber2String } = require('../utils/index')
 
 describe("Sneaker NFT", function () {
     let sneakerInstance, GSTTokenInstance, GMTTokenInstance, randomInstance,
-        gemInstance, mysteryBoxInstance, shoeBoxInstance;
+        gemInstance, mysteryBoxInstance, shoeBoxInstance, move2EarnInstance;
 
     let owner, user1, user2, user3;
     let mintSneakerTx;
@@ -37,19 +37,23 @@ describe("Sneaker NFT", function () {
         sneakerInstance = await sneakerInstance.deploy(randomInstance.address)
         await sneakerInstance.deployed()
 
-        await sneakerInstance.initialize( GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, mysteryBoxInstance.address)
+        const Move2Earn = await ethers.getContractFactory("Move2Earn")
+        move2EarnInstance = await Move2Earn.deploy(sneakerInstance.address)
+        await move2EarnInstance.deployed()
 
-        mintSneakerTx = await (await sneakerInstance.mint(user1.address, settings.newSneaker.one.quality, settings.newSneaker.one.type,[0,0])).wait()
+        await sneakerInstance.initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, mysteryBoxInstance.address, move2EarnInstance.address)
+
+        mintSneakerTx = await (await sneakerInstance.mint(user1.address, settings.newSneaker.one.quality, settings.newSneaker.one.type, [0, 0])).wait()
 
     })
 
     it("Mint revert if not owner of SneakerNFT contract", async function () {
-        await expect(sneakerInstance.connect(user1).mint(user1.address, 1, 2,[0,0])).to.be.revertedWith("Unauthorized")
+        await expect(sneakerInstance.connect(user1).mint(user1.address, 1, 2, [0, 0])).to.be.revertedWith("Unauthorized")
     })
 
     it("Mint should mint a new sneaker with correct attributes", async function () {
         let newSneaker = mintSneakerTx.events.filter(e => e.event == "MintSneaker")[0].args
-        
+
         expect(Bignumber2String(newSneaker.tokenId)).to.equal(settings.newSneaker.one.id)
         expect(newSneaker.sneaker.durability.toString()).to.equal(settings.newSneaker.one.durability)
         expect(newSneaker.sneaker.hp.toString()).to.equal(settings.newSneaker.one.hp)
@@ -73,6 +77,19 @@ describe("Sneaker NFT", function () {
 
     })
 
+    it("should increase user energy correctly", async () => {
+        //test: user energy should be 2-2 when possess 1 sneaker
+        let [energy, maxEnergy] = await move2EarnInstance.getUserEnergy(user1.address)
+        expect(energy).to.be.equal(2)
+        expect(maxEnergy).to.be.equal(2)
+
+        //test: user energy should be 3-3 when possess 2 sneakers
+        await sneakerInstance.mint(user1.address, settings.newSneaker.one.quality, settings.newSneaker.one.type, [0, 0]);
+         [energy, maxEnergy] = await move2EarnInstance.getUserEnergy(user1.address)
+        expect(energy).to.be.equal(3)
+        expect(maxEnergy).to.be.equal(3)
+    })
+    
     it("should return correct owner of the sneaker", async function () {
         let sneakerOwner = await sneakerInstance.getOwnerOfSneaker(0)
         expect(sneakerOwner).to.equal(user1.address)
@@ -121,11 +138,27 @@ describe("Sneaker NFT", function () {
             expect(balanceBefore.toString()).to.be.equal(settings.newSneaker.one.levelingPrice)
             expect(balanceAfter.toString()).to.be.equal('0')
         })
+
+        it("should unlock reward GMT at level 30", async ()=>{
+            await GSTTokenInstance.connect(owner).mintTo(user1.address, settings.newSneaker.one.levelingToLv30Price)
+
+            await GSTTokenInstance.connect(user1).approve(sneakerInstance.address, settings.newSneaker.one.levelingToLv30Price)
+
+            await Promise.all(Array(29).fill(0).map(async ()=>{
+                await (await sneakerInstance.connect(user1).levelingSneaker(settings.newSneaker.one.id)).wait();
+            }))
+        
+
+            const sneaker  = await sneakerInstance.getSneaker(settings.newSneaker.one.id)
+            expect(sneaker.isEarningGMT).to.be.true
+            expect(sneaker.level).to.be.equal(30)
+        })
     })
 
     describe("Sneaker decay", function () {
         it("sneaker decay: it should revert if the sender is not in authority list", async function () {
-            await expect(sneakerInstance.connect(user1).decaySneaker(settings.newSneaker.one.id, settings.update.decay.durability, settings.update.decay.hp)).to.be.revertedWith("Unauthorized")
+
+           await expect(sneakerInstance.connect(user2).decaySneaker(settings.newSneaker.one.id, settings.update.decay.durability, settings.update.decay.hp)).to.be.revertedWith("SneakerNFT: Unauthorized to decay Sneaker")
         })
 
         it("sneaker decay: it should revert if durability decay or hp decay exceed value ", async function () {

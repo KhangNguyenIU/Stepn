@@ -3,7 +3,6 @@
 pragma solidity ^0.8.2;
 
 import "./Constants.sol";
-import "hardhat/console.sol";
 
 interface IRandom {
     function getRandomNumber(uint16 _min, uint16 _max)

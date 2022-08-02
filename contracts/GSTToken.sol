@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.2;
 
-import "hardhat/console.sol";
 
 
 interface IBEP20 {
