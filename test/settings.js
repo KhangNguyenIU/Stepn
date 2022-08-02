@@ -46,7 +46,8 @@ const settings = {
             mintFrom: 2,
             isEarningGMT: false,
             decimal: 10 ** 10,
-            levelingPrice: '1000000000000000000'
+            levelingPrice: '1000000000000000000',
+            levelingToLv30Price: '30000000000000000000'
         }
     },
     update: {
@@ -97,6 +98,48 @@ const settings = {
         proba : [0,98,2,0,0],
         newSneaker:2,
         mintFrom: ['0', '1']
+    },
+    marketplace:{
+        feeRate:'2',
+        feeDecimal: '4',
+        price: '2000000000000000000',
+        fee:   '400000000000000',
+        update:{
+            feeRate:'3',
+            feeDecimal: '2',
+        },
+        offer:{
+            id: '0',
+            tokenId: '0',
+            price: "2000000000000000000",
+            sold: false,
+        }
+    },
+    move2Earn:{
+        sneakerContractBlance: '100000000000000000000',
+        tokenId :0,
+        normalMove:{
+            validSpeed: 9,
+            optimalDuration: 10,
+            speedCoeff: 100,
+            durationCoeff: 100,
+            hpCoeff: 100,
+            baseReward: 6
+        },
+        smallDamageMove:{
+            decay:11,
+            durationCoeff: 90,
+            hpCoeff: 90,
+        },
+        highDamageMove:{
+            decay:51,
+            durationCoeff: 10,
+            hpCoeff: 10,
+        },
+        wasteDuration: 30,
+        optimalHPcoeff: 100,
+        optimalDurabilityCoeff: 100,
+        optimalSpeedCoeff: 100,
     }
 }
 

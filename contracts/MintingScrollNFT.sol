@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Constants.sol";
 
@@ -10,7 +10,7 @@ interface IRandom {
         returns (uint256);
 }
 
-contract MintingScrollNFT is ERC721, Ownable {
+contract MintingScrollNFT is ERC721Enumerable, Ownable {
     using Constants for Constants.Quality;
 
     IRandom iRandom;
@@ -62,8 +62,8 @@ contract MintingScrollNFT is ERC721, Ownable {
     }
 
     function _getRanDomQuality() private  returns (Constants.Quality) {
-        return Constants.Quality(iRandom.getRandomNumber(0, 4));
-        // return Constants.Quality(1);
+        // return Constants.Quality(iRandom.getRandomNumber(0, 4));
+        return Constants.Quality(1);
     }
 
     function burnScroll(uint256 _tokenId) external {

@@ -7,7 +7,7 @@ const { Bignumber2String } = require('../utils/index')
 
 describe("Minting scroll ", function () {
     let sneakerInstance, GSTTokenInstance, GMTTokenInstance, randomInstance,
-        gemInstance, mintingScrollInstance, mysteryBoxInstance, shoeBoxInstance;
+        gemInstance, mintingScrollInstance, mysteryBoxInstance, shoeBoxInstance, move2EarnInstance;
 
     let owner, user1, user2, user3;
     beforeEach(async () => {
@@ -38,7 +38,12 @@ describe("Minting scroll ", function () {
         mintingScrollInstance = await ethers.getContractFactory("MintingScrollNFT")
         mintingScrollInstance = await mintingScrollInstance.deploy(randomInstance.address)
 
-        await sneakerInstance.initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, mysteryBoxInstance.address)
+
+        move2EarnInstance = await ethers.getContractFactory('Move2Earn')
+        move2EarnInstance = await move2EarnInstance.deploy(sneakerInstance.address)
+        await move2EarnInstance.deployed()
+
+        await sneakerInstance.initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, mysteryBoxInstance.address, move2EarnInstance.address)
 
     })
 

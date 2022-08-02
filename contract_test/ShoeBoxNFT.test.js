@@ -7,7 +7,7 @@ const { Bignumber2String, sleep } = require('../utils/index')
 
 
 describe("Shoe Box", function () {
-    let shoeBoxInstance, gemInstance, mysteryBoxInstance, randomInstance, GSTTokenInstance, GMTTokenInstance, sneakerInstance, mintingScrollInstance;
+    let shoeBoxInstance, gemInstance, move2EarnInstance, randomInstance, GSTTokenInstance, GMTTokenInstance, sneakerInstance, mintingScrollInstance;
     let owner, user1, user2
     beforeEach(async () => {
         [owner, user1, user2] = await ethers.getSigners()
@@ -32,6 +32,10 @@ describe("Shoe Box", function () {
         sneakerInstance = await Sneaker.deploy(randomInstance.address);
         await sneakerInstance.deployed();
 
+        const Move2Earn = await ethers.getContractFactory('Move2Earn')
+        move2EarnInstance = await Move2Earn.deploy(sneakerInstance.address)
+        await move2EarnInstance.deployed()
+
         const MintingScroll = await ethers.getContractFactory('MintingScrollNFT');
         mintingScrollInstance = await MintingScroll.deploy(randomInstance.address);
         // await mintingScrollInstance.deployed();
@@ -41,7 +45,7 @@ describe("Shoe Box", function () {
         shoeBoxInstance = await ShoeBox.deploy(randomInstance.address, sneakerInstance.address, mintingScrollInstance.address);
         await shoeBoxInstance.deployed()
 
-        await sneakerInstance.connect(owner).initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, shoeBoxInstance.address);
+        await sneakerInstance.connect(owner).initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, shoeBoxInstance.address, move2EarnInstance.address);
     })
 
     it("get probability", async () => {

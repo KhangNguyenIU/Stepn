@@ -3,9 +3,8 @@
 pragma solidity ^0.8.2;
 
 import "./Constants.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
 
 interface IRandom {
     function getRandomNumber(uint16 _min, uint16 _max)
@@ -50,7 +49,7 @@ interface ISneaker {
         returns (address owner);
 }
 
-contract ShoeBoxNFT is ERC721, Ownable {
+contract ShoeBoxNFT is ERC721Enumerable, Ownable {
     using Constants for Constants.Quality;
     using Constants for Constants.SneakerType;
 
