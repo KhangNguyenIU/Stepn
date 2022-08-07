@@ -30,10 +30,17 @@ contract MysteryBox is Ownable {
         iRandom = IRandom(_iRandom);
         iGem = IGem(_iGem);
         idCounter = 1;
-        coolDownTime = block.timestamp + 5 seconds;
+        coolDownTime = block.timestamp + 1 seconds;
     }
 
     mapping(uint256 => MysBox) allMysBox_;
+    
+    // map from tokenId to list of owned  token Ids
+    mapping(address => mapping(uint256 => uint256)) private _ownedTokens;
+
+    // map from tokenId to index of the owner tokens list
+    mapping(uint256 => uint256) private _ownedTokensIndex;
+
     mapping(uint256 => address) _owners;
     mapping(address => uint256) _balances;
 
@@ -51,15 +58,28 @@ contract MysteryBox is Ownable {
         uint256 randomLevel = iRandom.getRandomNumber(1, 3);
         iGem.mint(_msgSender(), uint8(randomLevel));
         _burn(_tokenId);
+    }
 
+    function balanceOf(address _address) public view returns (uint256) {
+        return _balances[_address];
+    }
+
+    function tokenOwnByIndex(address _owner, uint256 _index)external view returns(uint256){
+        require(_index < balanceOf(_owner), "MysteryBox: index out of bound");
+        return _ownedTokens[_owner][_index];
     }
 
     function mint(address _to) external onlyOwner {
         require(_to != address(0), "address is not valid");
         MysBox memory myBox = MysBox(idCounter, _to, coolDownTime);
         allMysBox_[idCounter] = myBox;
+
+        _ownedTokens[_to][balanceOf(_to)] = idCounter;
+        _ownedTokensIndex[idCounter] = balanceOf(_to);
+
         _owners[idCounter] = _to;
         _balances[_to]++;
+
         emit MintMysteryBox(_to, idCounter);
         idCounter++;
     }
@@ -69,13 +89,23 @@ contract MysteryBox is Ownable {
             _msgSender() == ownerOf(_tokenId) || _msgSender() == owner(),
             "MysteryBox: Unatuthorized to burn nft"
         );
+        _ownedTokens[_owners[_tokenId]][_ownedTokensIndex[_tokenId]] = _ownedTokens[_owners[_tokenId]][balanceOf(_owners[_tokenId]) - 1];
+        _ownedTokens[_owners[_tokenId]][balanceOf(_owners[_tokenId]) - 1] = 0;
+
+        delete _ownedTokensIndex[_tokenId];
+
+
         delete allMysBox_[_tokenId];
         _balances[_msgSender()]--;
         _owners[_tokenId] = address(0);
         emit BurnMysteryBox(_msgSender(), _tokenId);
     }
 
-    function getMysteryBox(uint256 _tokenId) public view returns (MysBox memory) {
+    function getMysteryBox(uint256 _tokenId)
+        public
+        view
+        returns (MysBox memory)
+    {
         return allMysBox_[_tokenId];
     }
 
@@ -87,6 +117,4 @@ contract MysteryBox is Ownable {
         owner = _owners[_tokenId];
         require(owner != address(0), "MysteryBox: invalid token id");
     }
-
-
 }

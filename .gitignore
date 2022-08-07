@@ -9,4 +9,6 @@ typechain-types
 cache
 artifacts
 
-secret.json
+
+client/node_modules
+>>>>>>> develop

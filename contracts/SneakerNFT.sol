@@ -33,16 +33,20 @@ interface IGem {
     function getGemOwner(uint256 _tokenId) external view returns (address);
 }
 
-contract SneakerNFT is ERC721Enumerable, GenerateSneakerBasisAttribute, Ownable {
+contract SneakerNFT is
+    ERC721Enumerable,
+    GenerateSneakerBasisAttribute,
+    Ownable
+{
     using Constants for Constants.Quality;
     using Constants for Constants.SneakerType;
     using Constants for Constants.Attributes;
     using SafeMath for uint256;
 
-    IBEP20  _GSTToken;
-    IBEP20  _GMTToken;
-    IGem  _gem;
-    IMove2Earn  _move2Earn;
+    IBEP20 _GSTToken;
+    IBEP20 _GMTToken;
+    IGem _gem;
+    IMove2Earn _move2Earn;
     uint256 idCounter;
 
     uint8 private decimal = 10;
@@ -131,7 +135,7 @@ contract SneakerNFT is ERC721Enumerable, GenerateSneakerBasisAttribute, Ownable 
     ) external {
         require(
             _msgSender() == owner() || authorities_[_msgSender()],
-            "SneakerNFT: Unauthorized to mint Sneakers"
+            "SneakerNFT: Unauthorized to F Sneakers"
         );
         (
             uint16 efficiency,
@@ -186,15 +190,19 @@ contract SneakerNFT is ERC721Enumerable, GenerateSneakerBasisAttribute, Ownable 
         allSneakers_[_tokenId] = sneaker;
     }
 
-    function userReward (address _user, uint256 _GSTTokenAmount, uint256 _GMTTokenAmount) external {
+    function userReward(
+        address _user,
+        uint256 _GSTTokenAmount,
+        uint256 _GMTTokenAmount
+    ) external {
         require(
             _msgSender() == owner() || authorities_[_msgSender()],
             "SneakerNFT: Unauthorized to mint Sneakers"
         );
-        if(_GSTTokenAmount > 0) {
+        if (_GSTTokenAmount > 0) {
             _GSTToken.transfer(_user, _GSTTokenAmount);
         }
-        if(_GMTTokenAmount > 0) {
+        if (_GMTTokenAmount > 0) {
             _GMTToken.transfer(_user, _GMTTokenAmount);
         }
     }
@@ -254,11 +262,22 @@ contract SneakerNFT is ERC721Enumerable, GenerateSneakerBasisAttribute, Ownable 
             address(this),
             Constants.LEVELING_PRICE
         );
-        allSneakers_[_tokenId].level++;
-        if(allSneakers_[_tokenId].level == Constants.MAX_LEVEL) {
-            allSneakers_[_tokenId].isEarningGMT = true;
+        Sneaker storage sneaker = allSneakers_[_tokenId];
+        if (sneaker.level == 1) {
+            sneaker.level = 5;
+        } else {
+            sneaker.level += 5;
         }
-        emit Leveling(_tokenId, _msgSender(), allSneakers_[_tokenId].level);
+
+        sneaker.attributes.efficiency += 5*10**decimal;
+        sneaker.attributes.luck += 5*10**decimal;
+        sneaker.attributes.comfort += 5*10**decimal;
+        sneaker.attributes.resilience += 5*10**decimal;
+
+        if (sneaker.level == Constants.MAX_LEVEL) {
+            sneaker.isEarningGMT = true;
+        }
+        emit Leveling(_tokenId, _msgSender(), sneaker.level);
     }
 
     function updateMintCount(uint256 _tokenId) external {
@@ -277,12 +296,12 @@ contract SneakerNFT is ERC721Enumerable, GenerateSneakerBasisAttribute, Ownable 
         uint256 _tokenId,
         uint8 _durabilityDecay,
         uint8 hpDecay
-    ) external  {
+    ) external {
         require(
             _msgSender() == owner() || authorities_[_msgSender()],
             "SneakerNFT: Unauthorized to decay Sneaker"
         );
-        
+
         require(
             allSneakers_[_tokenId].durability > _durabilityDecay,
             "SneakerNFT: Durability is too low"

@@ -1,5 +1,9 @@
 
 const settings = {
+    initialMint:{
+        balance: '3000000000000000000000', //3000 * 10**18
+        
+    },
     address0: "0x0000000000000000000000000000000000000000",
     decimal: 10 ** 10,
     quality: {
@@ -57,7 +61,11 @@ const settings = {
             exceedDurability: 100,
             exceedHP: 100,
             repairPrice: '90000000000000000'
+        },
+        leveling:{
+            levelPerUpdate: 5
         }
+
     },
     gem: {
         newGem: {

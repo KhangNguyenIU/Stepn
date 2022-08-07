@@ -98,6 +98,7 @@ describe("Move2Earn", function () {
             expect(energyAfter.maxEnergy).to.be.equal(2)
 
         })
+
         it("move success: decay sneaker after move ", async () => {
             await move2EarnInstance.connect(user1).move2Earn(settings.move2Earn.tokenId, settings.move2Earn.normalMove.validSpeed, settings.move2Earn.normalMove.optimalDuration, true);
 
@@ -106,6 +107,20 @@ describe("Move2Earn", function () {
 
             expect(sneaker.durability).to.be.equal(100 - usedEnergy)
             expect(sneaker.hp).to.be.equal(100 - usedEnergy)
+        })
+
+        it("should refill user energy success", async ()=>{
+            await move2EarnInstance.connect(user1).move2Earn(settings.move2Earn.tokenId, settings.move2Earn.normalMove.validSpeed, settings.move2Earn.normalMove.optimalDuration, true);
+            // await move2EarnInstance.connect(user1).refillEnergy();
+            const userEnergy = await move2EarnInstance.getUserEnergy(user1.address)
+            expect(userEnergy.energy).to.be.equal(0)
+
+            await move2EarnInstance.connect(owner).refillUserEnergy(user1.address)
+            const userEnergy2 = await move2EarnInstance.getUserEnergy(user1.address)
+            console.log({userEnergy})
+            console.log({userEnergy2})
+
+            expect(userEnergy2.energy).to.be.equal(userEnergy2.maxEnergy)
         })
 
         it("move success: should send reward to user (Full hp & durability)", async () => {

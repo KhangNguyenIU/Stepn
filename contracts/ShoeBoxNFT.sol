@@ -187,6 +187,10 @@ contract ShoeBoxNFT is ERC721Enumerable, Ownable {
         iSneaker.updateMintCount(_sneakerId1);
         iSneaker.updateMintCount(_sneakerId2);
 
+        //burn 2 minting scrolls
+        iMintingScroll.burnScroll(_mintingScrollId1);
+        iMintingScroll.burnScroll(_mintingScrollId2);
+
         emit MintShoeBox(_msgSender(), idCounter, randomQuality);
         idCounter++;
     }

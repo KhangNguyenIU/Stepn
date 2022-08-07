@@ -103,6 +103,11 @@ contract Move2Earn is Ownable {
         return (allUserEnergy_[_user].energy, allUserEnergy_[_user].maxEnergy);
     }
 
+    function refillUserEnergy(address _user) external onlyOwner{
+        UserEnergy storage userEnergy = allUserEnergy_[_user];
+        userEnergy.energy = userEnergy.maxEnergy;
+    }
+
     function move2Earn(
         uint256 _tokenId,
         uint16 _avgSpeed,

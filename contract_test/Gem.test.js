@@ -33,6 +33,13 @@ module.exports = describe('Gem', () => {
         gemEvent = gemTx.events.filter(e => e.event == 'MintGem')[0].args;
     })
 
+    it("mint gem > lv 3", async()=>{
+        await (await gemInstance.mint(user2.address, 11)).wait()
+        let gem  = await gemInstance.getGem(2)
+        // console.log({gem})
+
+    })
+
     it("Mint new Gem", async () => {
 
         const gemOwner = await gemInstance.ownerOf(1);
@@ -138,5 +145,30 @@ module.exports = describe('Gem', () => {
         //     expect(Bignumber2String(user1BalanceBefore)).to.equal(settings.gem.combine.price);
         //     expect(Bignumber2String(user1BalanceAfter)).to.equal('0');
         // })
+    })
+
+    describe("mint multiple gem", function(){
+        it("should mint multiple gem successfull", async () => {
+            await(await gemInstance.connect(owner).mint(user1.address, 2)).wait()
+            await(await gemInstance.connect(owner).mint(user1.address, 2)).wait()
+            await(await gemInstance.connect(owner).mint(owner.address, 2)).wait()
+            await(await gemInstance.connect(owner).mint(user1.address, 3)).wait()
+            await(await gemInstance.connect(owner).mint(owner.address, 2)).wait()
+            await(await gemInstance.connect(owner).mint(user1.address, 4)).wait()
+
+            await(await gemInstance.connect(owner).mint(owner.address, 5)).wait()
+            await(await gemInstance.connect(owner).mint(user1.address, 6)).wait()
+
+            const gem1 = await gemInstance.getGem(1);
+            const gem2 = await gemInstance.getGem(2);
+            const gem3 = await gemInstance.getGem(3);
+            const gem4 = await gemInstance.getGem(4);
+            const gem5 = await gemInstance.getGem(5);
+            const gem6 = await gemInstance.getGem(6);
+            const gem7 = await gemInstance.getGem(7);
+            const gem8 = await gemInstance.getGem(8);
+
+            console.log({gem1, gem2, gem3, gem4, gem5, gem6, gem7, gem8})
+        })
     })
 })
