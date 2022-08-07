@@ -62,12 +62,12 @@ contract MintingScrollNFT is ERC721Enumerable, Ownable {
     }
 
     function _getRanDomQuality() private  returns (Constants.Quality) {
-        // return Constants.Quality(iRandom.getRandomNumber(0, 4));
-        return Constants.Quality(1);
+        return Constants.Quality(iRandom.getRandomNumber(0, 4));
+        // return Constants.Quality(1);
     }
 
     function burnScroll(uint256 _tokenId) external {
-        require(_msgSender() == owner(), "Ownable: caller is not the owner");
+     
         _burn(_tokenId);
         emit BurnScroll(msg.sender, _tokenId);
         delete allScroll_[_tokenId];

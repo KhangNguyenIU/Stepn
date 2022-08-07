@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IBEP20.sol";
 
+
 interface INFT {
     function approve(address to, uint256 tokenId) external;
 
@@ -15,6 +16,15 @@ interface INFT {
     ) external;
 
     function ownerOf(uint256 tokenId) external view returns (address owner);
+
+    function balanceOf(address owner) external view returns (uint256);
+
+    function tokenOfOwnerByIndex(address owner, uint256 index)
+        external
+        view
+        returns (uint256);
+
+    function name() external view returns (string memory);
 }
 
 contract Marketplace is Ownable {
@@ -42,13 +52,13 @@ contract Marketplace is Ownable {
     address[] addressSet;
 
     // total number of NFTs on marketplace
-    uint256 _totalNFTCount;
+    uint256 public _totalNFTCount;
 
-    // tokenId to offer mapping
-    mapping(uint256 => Offer) iDToOffers_;
+    // offerId to offer mapping
+    mapping(uint256 => Offer)public  iDToOffers_;
 
     // NFT type to array of tokenIds mapping
-    mapping(address => uint256[]) addressToOfferIDs_;
+    mapping(address => uint256[])public addressToOfferIDs_;
 
     constructor(
         uint256 feeRate_,
@@ -84,8 +94,37 @@ contract Marketplace is Ownable {
         uint256 price
     );
 
+    function getNFTsOfNFTtype(address NFTaddress) public view returns (uint256[] memory) {
+        return addressToOfferIDs_[NFTaddress];
+    }
+
+    function getNFTidsOfUser(address _NFTaddress)
+        external
+        view
+        returns (uint256[] memory)
+    {
+        require(
+            _NFTAddresses.contains(_NFTaddress),
+            "Marketplace does not support this NFT"
+        );
+        INFT nft = INFT(_NFTaddress);
+        uint256[] memory ids = new uint256[](nft.balanceOf(_msgSender()));
+        for (uint256 i = 0; i < nft.balanceOf(_msgSender()); i++) {
+            ids[i] = nft.tokenOfOwnerByIndex(_msgSender(), i);
+        }
+        return ids;
+    }
+
+    function getTotalItemOfNFT(address _nftAddress)
+        external
+        view
+        returns (uint256 length)
+    {
+        return addressToOfferIDs_[_nftAddress].length;
+    }
+
     function makeOffer(
-        uint256 _tokenId,
+        uint256 _offerId,
         uint256 _price,
         address _NFTaddress
     ) external {
@@ -96,15 +135,15 @@ contract Marketplace is Ownable {
 
         INFT nft = INFT(_NFTaddress);
         require(
-            _msgSender() == nft.ownerOf(_tokenId),
+            _msgSender() == nft.ownerOf(_offerId),
             "Marketplace: only nft owner can make offer"
         );
 
-        nft.transferFrom(_msgSender(), address(this), _tokenId);
         token.transferFrom(_msgSender(), address(this), _calculateFee(_price));
+        nft.transferFrom(_msgSender(), address(this), _offerId);
         Offer memory newOffer = Offer(
             _totalNFTCount,
-            _tokenId,
+            _offerId,
             _msgSender(),
             address(this),
             _NFTaddress,
@@ -117,7 +156,7 @@ contract Marketplace is Ownable {
 
         emit OfferAdded(
             _totalNFTCount,
-            _tokenId,
+            _offerId,
             _msgSender(),
             address(this),
             _NFTaddress,
@@ -126,12 +165,18 @@ contract Marketplace is Ownable {
         _totalNFTCount++;
     }
 
-    function cancelOffer(uint256 _tokenId, address _NFTaddress) external {
+
+
+    //_tokenId is offerId
+    function cancelOffer(uint256 _offerId, address _NFTaddress) external {
         require(
-            iDToOffers_[_tokenId].seller == _msgSender(),
+            iDToOffers_[_offerId].seller == _msgSender(),
             "Only owner can cancel offer"
         );
-        require(!iDToOffers_[_tokenId].sold, "Marketplace: Offer is already sold");
+        require(
+            !iDToOffers_[_offerId].sold,
+            "Marketplace: Offer is already sold"
+        );
         require(
             _NFTAddresses.contains(_NFTaddress),
             "Marketplace: NFT address is not supported"
@@ -139,44 +184,48 @@ contract Marketplace is Ownable {
         INFT nft = INFT(_NFTaddress);
 
         // return the NFT to the seller
-        nft.transferFrom(address(this), _msgSender(), _tokenId);
+        nft.transferFrom(address(this), _msgSender(), iDToOffers_[_offerId].tokenId);
 
-        delete iDToOffers_[_tokenId];
-        _removeFromArray(addressToOfferIDs_[_msgSender()], _tokenId);
+        delete iDToOffers_[_offerId];
+        _removeFromArray(addressToOfferIDs_[_NFTaddress], _offerId);
 
         _totalNFTCount--;
-        emit OfferCancelled(_tokenId);
+        emit OfferCancelled(_offerId);
     }
 
-    function executeOffer(uint256 _tokenId, address _NFTaddress) external {
+
+    
+    function executeOffer(uint256 _offerId, address _NFTaddress) external {
         require(
-            iDToOffers_[_tokenId].sold == false,
+            iDToOffers_[_offerId].sold == false,
             "Marketplace: Offer is already sold"
         );
         require(
-            iDToOffers_[_tokenId].seller != _msgSender(),
+            iDToOffers_[_offerId].seller != _msgSender(),
             "Marketplace: Owner cannot execute offer"
         );
         require(
             _NFTAddresses.contains(_NFTaddress),
             "Marketplace: NFT address is not supported"
         );
-        Offer storage offer = iDToOffers_[_tokenId];
+        Offer storage offer = iDToOffers_[_offerId];
         INFT nft = INFT(_NFTaddress);
         token.transferFrom(
             _msgSender(),
             offer.seller,
             _calculateFee(offer.price)
         );
-        nft.transferFrom(address(this), _msgSender(), _tokenId);
 
-        iDToOffers_[_tokenId].sold = true;
+        nft.transferFrom(address(this), _msgSender(), offer.tokenId);
+
+        iDToOffers_[_offerId].sold = true;
+        _removeFromArray(addressToOfferIDs_[_NFTaddress], _offerId);
         emit ExecuteOffer(
-            _tokenId,
-            iDToOffers_[_tokenId].seller,
+            _offerId,
+            iDToOffers_[_offerId].seller,
             _msgSender(),
-            _tokenId,
-            iDToOffers_[_tokenId].price
+            offer.tokenId,
+            iDToOffers_[_offerId].price
         );
     }
 
@@ -192,8 +241,8 @@ contract Marketplace is Ownable {
         return (feeRate, feeDecimal, feeRecipient);
     }
 
-    function getOffer (uint256 _tokenId) external view returns( Offer memory ) {
-        return iDToOffers_[_tokenId];
+    function getOffer(uint256 _offerId) external view returns (Offer memory) {
+        return iDToOffers_[_offerId];
     }
 
     function updateFee(
