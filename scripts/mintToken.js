@@ -39,11 +39,12 @@ async function main() {
     marketplaceInstance = await (await ethers.getContractFactory('Marketplace')).attach(address.marketplace)
     move2EarnInstance = await (await ethers.getContractFactory('Move2Earn')).attach(address.move2Earn)
 
-    // await (await GSTTokenInstance.connect(deployer).mintTo(account1.address, settings.initialMint.balance)).wait()
-    // await (await GSTTokenInstance.connect(deployer).mintTo(account2.address, settings.initialMint.balance)).wait()
+    await (await GSTTokenInstance.connect(deployer).mintTo(account1.address, settings.initialMint.balance)).wait()
+    await (await GSTTokenInstance.connect(deployer).mintTo(account2.address, settings.initialMint.balance)).wait()
 
-    await ( await GSTTokenInstance.connect(deployer).mintTo(sneakerInstance.address, settings.initialMint.balance)).wait()
-  
+    await (await GSTTokenInstance.connect(deployer).mintTo(sneakerInstance.address, settings.initialMint.balance)).wait()
+   await (await GMTTokenInstance.connect(deployer).mintTo(sneakerInstance.address, settings.initialMint.balance)).wait()
+
 }
 
 main()

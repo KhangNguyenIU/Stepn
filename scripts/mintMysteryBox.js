@@ -26,8 +26,6 @@ async function main() {
     await (await mysteryBoxInstance.connect(deployer).mint(account1.address)).wait()
     await (await mysteryBoxInstance.connect(deployer).mint(deployer.address)).wait()
     await (await mysteryBoxInstance.connect(deployer).mint(deployer.address)).wait()
-    await (await mysteryBoxInstance.connect(deployer).mint(deployer.address)).wait()
-    await (await mysteryBoxInstance.connect(deployer).mint(account1.address)).wait()
 }
 
 main()

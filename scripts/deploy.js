@@ -58,7 +58,7 @@ async function main() {
 
     marketplaceInstance = await marketplaceInstance.deploy(settings.marketplace.feeRate, settings.marketplace.feeDecimal, GSTTokenInstance.address)
 
-    move2EarnInstance = await move2EarnInstance.deploy(sneakerInstance.address)
+    move2EarnInstance = await move2EarnInstance.deploy(sneakerInstance.address, mysteryBoxInstance.address)
 
     await sneakerInstance.connect(deployer).initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, shoeBoxInstance.address, move2EarnInstance.address)
 

@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat')
 const { settings } = require('../test/settings');
-const { writeAbiFile, writeAdressFile } = require('../utils/index')
+const { writeAbiFile, writeAdressFile, sleep } = require('../utils/index')
 const address = require('../contractAddress.json')
 
 const contractAbiDirs = [
@@ -39,8 +39,8 @@ async function main() {
     marketplaceInstance = await (await ethers.getContractFactory('Marketplace')).attach(address.marketplace)
     move2EarnInstance = await (await ethers.getContractFactory('Move2Earn')).attach(address.move2Earn)
 
-    const balance = await GSTTokenInstance.balanceOf('0xe5A60ceA3b54c07432aCB8618022934B99ea8407')
-    console.log(balance)
+    const msCount = await sneakerInstance.balanceOf(deployer.address)
+    console.log({msCount})
 }
 
 main()

@@ -67,7 +67,6 @@ contract MintingScrollNFT is ERC721Enumerable, Ownable {
     }
 
     function burnScroll(uint256 _tokenId) external {
-     
         _burn(_tokenId);
         emit BurnScroll(msg.sender, _tokenId);
         delete allScroll_[_tokenId];

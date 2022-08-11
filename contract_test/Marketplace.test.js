@@ -4,7 +4,7 @@ const { settings } = require('../test/settings')
 const { Bignumber2String } = require('../utils/index')
 
 describe("Marketplace", function () {
-    let shoeBoxInstance, gemInstance, randomInstance, GSTTokenInstance, GMTTokenInstance, sneakerInstance, mintingScrollInstance, marketplaceInstance, move2EarnInstance;
+    let shoeBoxInstance, gemInstance, randomInstance, GSTTokenInstance, GMTTokenInstance, sneakerInstance, mintingScrollInstance, marketplaceInstance, move2EarnInstance, mysteryBoxInstance;
     let owner, user1, user2
     beforeEach(async () => {
         [owner, user1, user2] = await ethers.getSigners()
@@ -36,8 +36,13 @@ describe("Marketplace", function () {
         shoeBoxInstance = await ShoeBox.deploy(randomInstance.address, sneakerInstance.address, mintingScrollInstance.address);
         await shoeBoxInstance.deployed()
 
+        const MysteryBox = await ethers.getContractFactory('MysteryBox');
+        mysteryBoxInstance = await MysteryBox.deploy(randomInstance.address, gemInstance.address);
+        await mysteryBoxInstance.deployed();
+
+
         const Move2Earn = await ethers.getContractFactory('Move2Earn')
-        move2EarnInstance = await Move2Earn.deploy(sneakerInstance.address)
+        move2EarnInstance = await Move2Earn.deploy(sneakerInstance.address, mysteryBoxInstance.address)
         await move2EarnInstance.deployed()
 
         await sneakerInstance.connect(owner).initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, shoeBoxInstance.address, move2EarnInstance.address);

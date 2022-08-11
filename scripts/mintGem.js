@@ -22,14 +22,17 @@ async function main() {
     move2EarnInstance = await (await ethers.getContractFactory('Move2Earn')).attach(address.move2Earn)
 
 
-// Mint Gem
-    await (await gemInstance.connect(deployer).mint(account1.address, '3')).wait()
-    await (await gemInstance.connect(deployer).mint(deployer.address, '4')).wait()
-    // await (await gemInstance.connect(deployer).mint(account1.address, '5')).wait()
-    // await (await gemInstance.connect(deployer).mint(deployer.address, '3')).wait()
-    // await (await gemInstance.connect(deployer).mint(account1.address, '5')).wait()
-    // await (await gemInstance.connect(deployer).mint(account1.address, '6')).wait()
-    // await (await gemInstance.connect(deployer).mint(account2.address, '3')).wait()
+    // Mint Gem
+    const tx = await (await gemInstance.connect(deployer).mint(deployer.address, '1')).wait()
+    console.log({tx})
+    // await (await gemInstance.connect(deployer).mint(account1.address, '1')).wait()
+    // await (await gemInstance.connect(deployer).mint(deployer.address, '2')).wait()
+
+    // await (await gemInstance.connect(deployer).mint(account1.address, '1')).wait()
+    // await (await gemInstance.connect(deployer).mint(deployer.address, '2')).wait()
+    // await (await gemInstance.connect(deployer).mint(account1.address, '2')).wait()
+    // await (await gemInstance.connect(deployer).mint(account1.address, '4')).wait()
+    // await (await gemInstance.connect(deployer).mint(account2.address, '2')).wait()
 
 
 }

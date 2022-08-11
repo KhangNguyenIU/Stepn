@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react'
 import { ethers } from 'ethers'
 import address from '../address/contractAddress.json'
-import { SneakerNFTabi, Marketplaceabi, GemNFTabi, MintingScrollNFTabi, ShoeBoxNFTabi, GSTTokenabi, Move2Earnabi, MysteryBoxabi } from '../abi/index.js'
+import { SneakerNFTabi, Marketplaceabi, GemNFTabi, MintingScrollNFTabi, ShoeBoxNFTabi, GSTTokenabi, Move2Earnabi, MysteryBoxabi, GMTTokenabi } from '../abi/index.js'
 import { COMBINE_PRICE, EQUIP_GEM_PRICE, LEVELING_PRICE, REPAIR_PRICE } from '../Constants'
 
 const { ethereum } = window
@@ -25,7 +25,10 @@ export const MoveProvider = ({ children }) => {
         type: ''
     })
     const [loading, setLoading] = useState(false)
-    const [balance, setBalance] = useState(0)
+    const [balance, setBalance] = useState({
+        gst: 0,
+        gmt: 0
+    })
     const [energy, setEnergy] = useState({
         energy: 0,
         maxEnergy: 0
@@ -188,21 +191,21 @@ export const MoveProvider = ({ children }) => {
         }
     }
 
-    const equipGem =async (sneakerId, gemId, slotId, callback) =>{
-        try{
-            console.log({sneakerId, gemId, slotId})
+    const equipGem = async (sneakerId, gemId, slotId, callback) => {
+        try {
+            console.log({ sneakerId, gemId, slotId })
             setLoading(true)
             const SneakerNFT = await getContract(address.sneakerNFT, SneakerNFTabi)
             const GSTToken = await getContract(address.GSTToken, GSTTokenabi)
             await (await GSTToken.approve(address.sneakerNFT, EQUIP_GEM_PRICE)).wait()
-            const tx =await (await SneakerNFT.equipGem(sneakerId, gemId, slotId)).wait()
-            console.log({tx})
+            const tx = await (await SneakerNFT.equipGem(sneakerId, gemId, slotId)).wait()
+            console.log({ tx })
             const newBalance = await GSTToken.balanceOf(currentAccount)
-            setBalance(newBalance)
+            setBalance(state => ({ ...state, gst: newBalance }))
             setLoading(false)
             callback()
-        }catch(error){
-            console.log({error})
+        } catch (error) {
+            console.log({ error })
             setNotification(error?.error?.data?.message || "falied to equip gem", 'error')
             setLoading(false)
         }
@@ -251,7 +254,7 @@ export const MoveProvider = ({ children }) => {
             await (await NFTContract.setApprovalForAll(address.marketplace, true)).wait()
             const tx = await (await Marketplace.makeOffer(tokenId, price, nftAddress)).wait()
             const newBalance = await getUserBalance(currentAccount)
-            setBalance(newBalance)
+            setBalance(state => ({ state, ...newBalance }))
             setLoading(false)
             setNotification('Offer made successfully', 'success')
             callback()
@@ -367,7 +370,7 @@ export const MoveProvider = ({ children }) => {
             const newEnergy = await getUserEnergy(currentAccount)
             setEnergy(newEnergy)
             const newBalance = await getUserBalance(currentAccount)
-            setBalance(newBalance)
+            setBalance(state => ({ ...newBalance }))
             setLoading(false)
         } catch (error) {
             setLoading(false)
@@ -376,7 +379,7 @@ export const MoveProvider = ({ children }) => {
         }
     }
 
-    const levelUpSneaker = async (tokenId, callback) => { 
+    const levelUpSneaker = async (tokenId, callback) => {
         try {
             setLoading(true)
             const SneakerNFT = await getContract(address.sneakerNFT, SneakerNFTabi)
@@ -384,11 +387,11 @@ export const MoveProvider = ({ children }) => {
             await (await GSTToken.approve(address.sneakerNFT, LEVELING_PRICE)).wait()
             const tx = await (await SneakerNFT.levelingSneaker(tokenId)).wait()
             console.log({ tx })
-           SneakerNFT.on('Leveling',res=>{
-            console.log({res})
-           })
+            SneakerNFT.on('Leveling', res => {
+                console.log({ res })
+            })
             const newBalance = await getUserBalance(currentAccount)
-            setBalance(newBalance)
+            setBalance(state => ({ ...state, ...newBalance }))
             setLoading(false)
             callback()
         } catch (error) {
@@ -406,7 +409,7 @@ export const MoveProvider = ({ children }) => {
             const tx = await (await GemNFT.combineGem(gemList[0], gemList[1], gemList[2])).wait()
             console.log({ tx })
             const newBalance = await getUserBalance(currentAccount)
-            setBalance(newBalance)
+            setBalance(state => ({ ...state, ...newBalance }))
 
             setLoading(false)
             callback()
@@ -416,8 +419,8 @@ export const MoveProvider = ({ children }) => {
         }
     }
 
-    const repairSneaker =async  (tokenid, callback) => {
-        try{
+    const repairSneaker = async (tokenid, callback) => {
+        try {
             setLoading(true)
             const SneakerNFT = await getContract(address.sneakerNFT, SneakerNFTabi)
             const GSTToken = await getContract(address.GSTToken, GSTTokenabi)
@@ -425,11 +428,11 @@ export const MoveProvider = ({ children }) => {
             const tx = await (await SneakerNFT.repairSneaker(tokenid)).wait()
             console.log({ tx })
             const newBalance = await getUserBalance(currentAccount)
-            setBalance(newBalance)
+            setBalance(state => ({ ...state, ...newBalance }))
             setLoading(false)
             callback()
 
-        }catch(error){
+        } catch (error) {
             console.log(error)
             setLoading(false)
         }
@@ -442,7 +445,7 @@ export const MoveProvider = ({ children }) => {
             const GSTToken = await getContract(address.GSTToken, GSTTokenabi)
             const tw = await (await ShoeBoxNFT.mint(sneaker1, sneaker2, mintingScroll1, mintingScroll2)).wait()
             const newBalance = await getUserBalance(currentAccount)
-            setBalance(newBalance)
+            setBalance(state => ({ ...state, ...newBalance }))
             setLoading(false)
             setNotification('ShoeBox minted successfully', 'success')
             callback()
@@ -453,33 +456,33 @@ export const MoveProvider = ({ children }) => {
     }
 
 
-    const getListMysteryBoxOfUser = async (userAddress) =>{
-        try{
+    const getListMysteryBoxOfUser = async (userAddress) => {
+        try {
             const MysteryBox = await getContract(address.mysteryBoxNFT, MysteryBoxabi)
             let totalMysBoxOfUser = await MysteryBox.balanceOf(userAddress)
             let listMysteryBox = []
 
-            await Promise.all(Array(Number(totalMysBoxOfUser.toString())).fill(0).map(async (_, index)=>{
-                let tokenIdAtIndex = await MysteryBox.tokenOwnByIndex(userAddress,index)
-                let mysBox =await MysteryBox.getMysteryBox(tokenIdAtIndex)
+            await Promise.all(Array(Number(totalMysBoxOfUser.toString())).fill(0).map(async (_, index) => {
+                let tokenIdAtIndex = await MysteryBox.tokenOwnByIndex(userAddress, index)
+                let mysBox = await MysteryBox.getMysteryBox(tokenIdAtIndex)
                 listMysteryBox.push(mysBox)
             }))
 
             return listMysteryBox
-        }catch(error){
+        } catch (error) {
             console.log(error)
         }
     }
 
-    const openMysteryBox = async (tokenId, callback) =>{
-        try{
+    const openMysteryBox = async (tokenId, callback) => {
+        try {
             setLoading(true)
             const MysteryBox = await getContract(address.mysteryBoxNFT, MysteryBoxabi)
             const tx = await (await MysteryBox.open(tokenId)).wait()
-            console.log({tx})
+            console.log({ tx })
             setLoading(false)
             callback()
-        }catch(error){
+        } catch (error) {
             console.log(error)
             setLoading(false)
         }
@@ -494,9 +497,29 @@ export const MoveProvider = ({ children }) => {
 
     const getUserBalance = async (userAddress) => {
         const GSTToken = await getContract(address.GSTToken, GSTTokenabi)
-        const balance = await GSTToken.balanceOf(userAddress)
-        return balance
+        const GMTToken = await getContract(address.GMTToken, GMTTokenabi)
+        const balanceGST = await GSTToken.balanceOf(userAddress)
+        const balanceGMT = await GMTToken.balanceOf(userAddress)
+        return {
+            gst: balanceGST.toString(),
+            gmt: balanceGMT.toString()
+        }
     }
+
+    function test() {
+        getFunc.run()
+    }
+
+    function getFunc(func) {
+        if (typeof func === 'function')
+            getFunc.run = function () {
+                func("HEHE")
+            }
+    }
+
+    // useEffect(() => {
+    //     test()
+    // }, [])
 
     useEffect(() => {
         (async () => {
@@ -505,7 +528,7 @@ export const MoveProvider = ({ children }) => {
                 const energy = await getUserEnergy(currentAccount);
                 setEnergy(energy);
                 const balance = await getUserBalance(currentAccount);
-                setBalance(balance.toString());
+                setBalance(balance);
 
             }
         })()
@@ -515,8 +538,8 @@ export const MoveProvider = ({ children }) => {
         <MoveContext.Provider
             value={{
                 connectWallet, checkIfWalletIsConnected, currentAccount, setCurrentAccount, getListNFTsOfaUser, makeOffer, notify, setNotification, getListNFTsListingOnMarketplace,
-                executeOffer, loading, balance, energy, move2Earn, levelUpSneaker, combine, openShoeBox,openMysteryBox,
-                mintShoeBox,repairSneaker,equipGem, getListMysteryBoxOfUser
+                executeOffer, loading, balance, energy, move2Earn, levelUpSneaker, combine, openShoeBox, openMysteryBox, getFunc,
+                mintShoeBox, repairSneaker, equipGem, getListMysteryBoxOfUser
             }}
         >
             {children}

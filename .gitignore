@@ -7,8 +7,12 @@ typechain-types
 
 #Hardhat files
 cache
-artifacts
+artifacts/
 
+<<<<<<< HEAD
 
 client/node_modules
+>>>>>>> develop
+=======
+client/node_modules/
 >>>>>>> develop

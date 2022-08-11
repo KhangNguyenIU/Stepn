@@ -5,14 +5,17 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { MoveProvider } from './Context/MoveContext';
+import { QRCodeProvider } from './Context/QRCode';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
         <MoveProvider>
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
+            <QRCodeProvider>
+                <BrowserRouter>
+                    <App />
+                </BrowserRouter>
+            </QRCodeProvider>
         </MoveProvider>
     </React.StrictMode>
 );

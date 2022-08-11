@@ -18,6 +18,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import AddIcon from '@mui/icons-material/Add';
+import { QRCodeContext } from '../../Context/QRCode';
 
 export default function SneakerList() {
   const { getListNFTsOfaUser, currentAccount, equipGem } =
@@ -59,7 +60,7 @@ export default function SneakerList() {
 
   const SneakerCard = ({ sneaker, handleClickOpen, getSneakersList }) => {
     const { makeOffer, move2Earn, levelUpSneaker } = useContext(MoveContext);
-
+    const {getQRCode} = useContext(QRCodeContext)
     const [price, setPrice] = useState(0);
     const [runTime, setRunTime] = useState(0);
     const [runSpeed, setRunSpeed] = useState(0);
@@ -77,7 +78,8 @@ export default function SneakerList() {
     };
 
     const onLevelUp = () => {
-      levelUpSneaker(sneaker.id.toString(), getSneakersList);
+    //   levelUpSneaker(sneaker.id.toString(), getSneakersList);
+    getQRCode('levelingSneaker', [{ type: "number", value: Number(sneaker.id.toString()) }])
     };
 
     const onSell = () => {
@@ -150,6 +152,8 @@ export default function SneakerList() {
 
   const SneakerModal = ({ sneaker, open, handleClose, getSneakersList }) => {
     const { repairSneaker } = useContext(MoveContext);
+  
+
 
     const onRepair = () => {
       repairSneaker(sneaker.id.toString(), getSneakersList);

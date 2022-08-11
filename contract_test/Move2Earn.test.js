@@ -5,7 +5,7 @@ const { Bignumber2String, sleep } = require('../utils/index')
 
 
 describe("Move2Earn", function () {
-    let shoeBoxInstance, gemInstance, move2EarnInstance, randomInstance, GSTTokenInstance, GMTTokenInstance, sneakerInstance, mintingScrollInstance;
+    let shoeBoxInstance, gemInstance, move2EarnInstance, randomInstance, GSTTokenInstance, GMTTokenInstance, sneakerInstance, mintingScrollInstance, mysteryBoxInstance;
     let owner, user1, user2
     beforeEach(async () => {
         [owner, user1, user2] = await ethers.getSigners()
@@ -30,6 +30,10 @@ describe("Move2Earn", function () {
         sneakerInstance = await Sneaker.deploy(randomInstance.address);
         await sneakerInstance.deployed();
 
+        const MysteryBox = await ethers.getContractFactory('MysteryBox');
+        mysteryBoxInstance = await MysteryBox.deploy(randomInstance.address, gemInstance.address);
+        await mysteryBoxInstance.deployed();
+
         const MintingScroll = await ethers.getContractFactory('MintingScrollNFT');
         mintingScrollInstance = await MintingScroll.deploy(randomInstance.address);
 
@@ -38,7 +42,7 @@ describe("Move2Earn", function () {
         await shoeBoxInstance.deployed()
 
         const Move2Earn = await ethers.getContractFactory('Move2Earn')
-        move2EarnInstance = await Move2Earn.deploy(sneakerInstance.address)
+        move2EarnInstance = await Move2Earn.deploy(sneakerInstance.address, mysteryBoxInstance.address)
         await move2EarnInstance.deployed()
 
         await sneakerInstance.connect(owner).initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, shoeBoxInstance.address, move2EarnInstance.address);
@@ -83,13 +87,17 @@ describe("Move2Earn", function () {
     describe("Move succes", function () {
         beforeEach(async () => {
             await GSTTokenInstance.connect(owner).mintTo(sneakerInstance.address, settings.move2Earn.sneakerContractBlance)
-
         })
         it("move success: reduce energy", async () => {
+            let mysBox = await mysteryBoxInstance.connect(user1).getMysteryBox(1);
+            console.log({mysBox})
 
             let energyBefore = await move2EarnInstance.connect(user1).getUserEnergy(user1.address)
             await move2EarnInstance.connect(user1).move2Earn(0, 3, 10, true);
             let energyAfter = await move2EarnInstance.connect(user1).getUserEnergy(user1.address)
+
+             mysBox = await mysteryBoxInstance.connect(user1).getMysteryBox(1);
+            console.log({mysBox})
 
             expect(energyBefore.energy).to.be.equal(2)
             expect(energyBefore.maxEnergy).to.be.equal(2)
@@ -176,6 +184,8 @@ describe("Move2Earn", function () {
 
             const reward = (baseReaward + extraReward) * energyUsed * settings.move2Earn.normalMove.speedCoeff / 100 * settings.move2Earn.normalMove.durationCoeff / 100 *settings.move2Earn.smallDamageMove.hpCoeff /100
 
+      
+    
             expect(balanceUser1After.toString()).to.be.equal(balanceUser1Before.add(String(reward)).toString())
         })
 
