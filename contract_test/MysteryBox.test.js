@@ -45,73 +45,37 @@ module.exports = describe('MysteryBox', () => {
 
 
 
-    // describe("Open mystery box", function () {
+    describe("Open mystery box", function () {
 
-    //     beforeEach(async () => {
-    //         await (await mysteryBoxInstance.connect(owner).mint(user1.address)).wait()
-    //     })
-
-    //     it("revert if mystery box is in cooling down", async () => {
-    //         await expect(mysteryBoxInstance.connect(user1).open(1)).to.be.revertedWith("MysteryBox: wait until mysterBox is cooled down")
-    //     })
-
-    //     it("should open mystery box success", async () => {
-    //         //wait unil mystery box is cooled down
-    //         await sleep(5000)
-    //         await mysteryBoxInstance.connect(user1).open(1)
-
-    //         //get new minted 
-    //         const newGem = await gemInstance.getGem(1)
-
-    //         expect(newGem.level).to.be.within(1, 3)
-    //         expect(await gemInstance.ownerOf(1)).to.be.equal(user1.address)
-
-    //         // mystery box be burnt after opening
-    //         const box = await (mysteryBoxInstance.getMysteryBox(1))
-    //         expect(box.owner).to.be.equal(settings.address0)
-    //         await expect(mysteryBoxInstance.ownerOf(1)).to.be.revertedWith("MysteryBox: invalid token id")
-    //     })
-    // })
-
-    describe("Get list mystery box of a user", function () {
         beforeEach(async () => {
             await (await mysteryBoxInstance.connect(owner).mint(user1.address)).wait()
-            await (await mysteryBoxInstance.connect(owner).mint(user1.address)).wait()
-            await (await mysteryBoxInstance.connect(owner).mint(user1.address)).wait()
-
         })
 
-        it("should return list of mysterybox of a user", async () => {
-            let totalMysBox = await mysteryBoxInstance.balanceOf(user1.address)
-            totalMysBox = Number(Bignumber2String(totalMysBox))
+        // it("revert if mystery box is in cooling down", async () => {
+        //     await sleep(1000)
+        //     await expect(mysteryBoxInstance.connect(user1).open(1)).to.be.revertedWith("MysteryBox: wait until mysterBox is cooled down")
+        // })
 
-            let listMysBox = []
-            // console.log(Number(Bignumber2String(totalMysBox)))
-            await Promise.all(Array(totalMysBox).fill(0).map(async (_, index) => {
-                const msId = await mysteryBoxInstance.tokenOwnByIndex(user1.address, index)
-                listMysBox.push(msId)
-            }))
-            console.log({ listMysBox })
+        // it("should open mystery box success", async () => {
+        //     //wait unil mystery box is cooled down
+        //     console.log("start")
+        //     await sleep(10000)
+        //     console.log("end")
+            // await new Promise(r => setTimeout(r, 5000))
+            // await(await mysteryBoxInstance.connect(user1).open(1)).wait()
 
-            sleep(2000)
-            const box = await mysteryBoxInstance.getMysteryBox(2)
-            console.log({box})
-            await (await mysteryBoxInstance.connect(user1).open(listMysBox[1])).wait()
+        //     //get new minted 
+        //     const newGem = await gemInstance.getGem(1)
+        //     console.log({newGem})
+        //     expect(newGem.level).to.be.within(1, 3)
+        //     expect(await gemInstance.ownerOf(1)).to.be.equal(user1.address)
 
-            totalMysBox = await mysteryBoxInstance.balanceOf(user1.address)
-            totalMysBox = Number(Bignumber2String(totalMysBox))
-
-            listMysBox = []
-            // console.log(Number(Bignumber2String(totalMysBox)))
-            await Promise.all(Array(totalMysBox).fill(0).map(async (_, index) => {
-                const msId = await mysteryBoxInstance.tokenOwnByIndex(user1.address, index)
-                listMysBox.push(msId)
-            }))
-            
-            console.log({ listMysBox })
-            const oldMysBox = await mysteryBoxInstance.getMysteryBox(2)
-            console.log({oldMysBox})
-            expect(1).to.be.equal(1)
-        })
+        //     // mystery box be burnt after opening
+        //     const box = await (mysteryBoxInstance.getMysteryBox(1))
+        //     expect(box.owner).to.be.equal(settings.address0)
+        //     await expect(mysteryBoxInstance.ownerOf(1)).to.be.revertedWith("MysteryBox: invalid token id")
+        // })
     })
+
+
 })

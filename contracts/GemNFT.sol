@@ -70,7 +70,7 @@ contract GemNFT is ERC721Enumerable, Ownable {
         require(_to != address(0), "address is not valid");
         approveMint_[_to] = _approve;
     }
-    
+
     function mint(address _to, uint8 _level) external {
         require(
             _msgSender() == owner() || approveMint_[_msgSender()],
@@ -171,6 +171,14 @@ contract GemNFT is ERC721Enumerable, Ownable {
         return ownerOf(_tokenId);
     }
 
+    // function _randomType() private returns (Constants.Attributes) {
+    //     uint256 random = iRandom.getRandomNumber(0, 3);
+    //     if (random == 0) return Constants.Attributes.Efficiency;
+    //     else if (random == 1) return Constants.Attributes.Luck;
+    //     else if (random == 2) return Constants.Attributes.Comfort;
+    //     else return Constants.Attributes.Resilience;
+    // }
+
     function _randomType() private returns (Constants.Attributes) {
         uint256 random = iRandom.getRandomNumber(0, 3);
         if (random == 0) return Constants.Attributes.Efficiency;
@@ -185,10 +193,10 @@ contract GemNFT is ERC721Enumerable, Ownable {
         returns (uint16 base, uint16 effect)
     {
         require(_level <= Constants.MAX_LEVEL, "GemNFT: max level");
-        uint8 _base = 2;
-        uint8 _effect = 5;
+        uint16 _base = 2;
+        uint16 _effect = 5;
 
-        for (uint8 i = 1; i <= _level; i++) {
+        for (uint16 i = 1; i <= _level; i++) {
             base += _base * i + i;
             effect += _effect * i + i;
         }

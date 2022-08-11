@@ -38,9 +38,8 @@ describe("Minting scroll ", function () {
         mintingScrollInstance = await ethers.getContractFactory("MintingScrollNFT")
         mintingScrollInstance = await mintingScrollInstance.deploy(randomInstance.address)
 
-
         move2EarnInstance = await ethers.getContractFactory('Move2Earn')
-        move2EarnInstance = await move2EarnInstance.deploy(sneakerInstance.address)
+        move2EarnInstance = await move2EarnInstance.deploy(sneakerInstance.address, mysteryBoxInstance.address)
         await move2EarnInstance.deployed()
 
         await sneakerInstance.initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, mysteryBoxInstance.address, move2EarnInstance.address)
@@ -75,9 +74,9 @@ describe("Minting scroll ", function () {
             expect(scroll.owner).to.equal(user2.address)
         })
 
-        it("Burn scroll: revert if the sender is not the contract owner", async ()=>{
-            await expect(mintingScrollInstance.connect(user1).burnScroll(1)).to.be.revertedWith("Ownable: caller is not the owner")
-        })
+        // it("Burn scroll: revert if the sender is not the contract owner", async ()=>{
+        //     await expect(mintingScrollInstance.connect(user1).burnScroll(1)).to.be.revertedWith("Ownable: caller is not the owner")
+        // })
         it("Burn scroll success", async ()=>{
             await mintingScrollInstance.connect(owner).burnScroll(1)
 

@@ -5,12 +5,12 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import { Card, CardMedia, Container, Grid, Typography } from '@mui/material';
-import { MoveContext } from '../../Context/MoveContext';
-import { Quality, SnkearType } from '../../Constants';
+
 import SneakerList from '../Marketplace/SneakerList';
 import GemList from '../Marketplace/GemList';
 import MintingScrollList from '../Marketplace/MintingScrollList';
 import Layout from '../Layout';
+import ShoeBoxList from './ShoeBoxList';
 
 export default function Marketplace() {
   const [value, setValue] = React.useState('1');
@@ -35,7 +35,7 @@ export default function Marketplace() {
                 <Tab label="Sneaker" value="1" />
                 <Tab label="Gem" value="2" />
                 <Tab label="Minting Scroll" value="3" />
-                <Tab label="Shoe Box" value="4" disabled />
+                <Tab label="Shoe Box" value="4"  />
               </TabList>
             </Box>
             <TabPanel value="1">
@@ -47,7 +47,9 @@ export default function Marketplace() {
             <TabPanel value="3">
               <MintingScrollList />
             </TabPanel>
-            <TabPanel value="4"></TabPanel>
+            <TabPanel value="4">
+                <ShoeBoxList/>
+            </TabPanel>
           </TabContext>
         </Box>
       </Container>

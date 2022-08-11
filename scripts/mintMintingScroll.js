@@ -23,12 +23,6 @@ async function main() {
 
 
     // Mint Minting Scroll
-    // await(await mintingScrollInstance.connect(deployer).mintScroll(account1.address)).wait()
-    // await(await mintingScrollInstance.connect(deployer).mintScroll(deployer.address)).wait()
-    // await(await mintingScrollInstance.connect(deployer).mintScroll(deployer.address)).wait()
-    // await(await mintingScrollInstance.connect(deployer).mintScroll(account1.address)).wait()
-    // await(await mintingScrollInstance.connect(deployer).mintScroll(deployer.address)).wait()
-    // await(await mintingScrollInstance.connect(deployer).mintScroll(account1.address)).wait()
     await(await mintingScrollInstance.connect(deployer).mintScroll(account1.address)).wait()
     await(await mintingScrollInstance.connect(deployer).mintScroll(account1.address)).wait()
     await(await mintingScrollInstance.connect(deployer).mintScroll(account1.address)).wait()

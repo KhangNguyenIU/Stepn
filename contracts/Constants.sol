@@ -25,7 +25,7 @@ library Constants {
     }
 
     uint8 constant MAX_LEVEL = 30;
-
+    uint8 constant MAX_LEVEL_GEM= 10;
     uint8 constant MAX_HP = 100;
     uint8 constant MAX_DURABILITY = 100;
 

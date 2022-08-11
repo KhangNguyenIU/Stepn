@@ -158,7 +158,15 @@ module.exports = describe('Gem', () => {
 
             await(await gemInstance.connect(owner).mint(owner.address, 5)).wait()
             await(await gemInstance.connect(owner).mint(user1.address, 6)).wait()
+            await(await gemInstance.connect(owner).mint(user1.address, 2)).wait()
+            await(await gemInstance.connect(owner).mint(user1.address, 2)).wait()
+            await(await gemInstance.connect(owner).mint(owner.address, 2)).wait()
+            await(await gemInstance.connect(owner).mint(user1.address, 3)).wait()
+            await(await gemInstance.connect(owner).mint(owner.address, 2)).wait()
+            await(await gemInstance.connect(owner).mint(user1.address, 4)).wait()
 
+            await(await gemInstance.connect(owner).mint(owner.address, 5)).wait()
+            await(await gemInstance.connect(owner).mint(user1.address, 6)).wait()
             const gem1 = await gemInstance.getGem(1);
             const gem2 = await gemInstance.getGem(2);
             const gem3 = await gemInstance.getGem(3);
@@ -167,8 +175,16 @@ module.exports = describe('Gem', () => {
             const gem6 = await gemInstance.getGem(6);
             const gem7 = await gemInstance.getGem(7);
             const gem8 = await gemInstance.getGem(8);
+            const gem9 = await gemInstance.getGem(9);
+            const gem10 = await gemInstance.getGem(10);
+            const gem11 = await gemInstance.getGem(11);
+            const gem12 = await gemInstance.getGem(12);
+            const gem13 = await gemInstance.getGem(13);
+            const gem14 = await gemInstance.getGem(14);
+            const gem15 = await gemInstance.getGem(15);
+            const gem16 = await gemInstance.getGem(16);
 
-            console.log({gem1, gem2, gem3, gem4, gem5, gem6, gem7, gem8})
+            console.log({gem1, gem2, gem3, gem4, gem5, gem6, gem7, gem8, gem9, gem10, gem11, gem12, gem13, gem14, gem15, gem16})
         })
     })
 })

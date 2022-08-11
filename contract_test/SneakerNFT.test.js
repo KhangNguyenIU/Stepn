@@ -38,7 +38,7 @@ describe("Sneaker NFT", function () {
         await sneakerInstance.deployed()
 
         const Move2Earn = await ethers.getContractFactory("Move2Earn")
-        move2EarnInstance = await Move2Earn.deploy(sneakerInstance.address)
+        move2EarnInstance = await Move2Earn.deploy(sneakerInstance.address, mysteryBoxInstance.address)
         await move2EarnInstance.deployed()
 
         await sneakerInstance.initialize(GSTTokenInstance.address, GMTTokenInstance.address, gemInstance.address, mysteryBoxInstance.address, move2EarnInstance.address)

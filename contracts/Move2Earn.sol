@@ -52,12 +52,17 @@ interface ISneakerNFT {
     ) external;
 }
 
+interface IMysteryBox {
+    function mint(address _to) external;
+}
+
 contract Move2Earn is Ownable {
     using Constants for Constants.Quality;
     using Constants for Constants.SneakerType;
     using Constants for Constants.Attributes;
 
     ISneakerNFT isneakerNFT;
+    IMysteryBox iMyysteryBox;
 
     struct UserEnergy {
         uint8 energy;
@@ -67,8 +72,9 @@ contract Move2Earn is Ownable {
 
     mapping(address => UserEnergy) allUserEnergy_;
 
-    constructor(address _isneakerNFTAddress) {
+    constructor(address _isneakerNFTAddress, address _iMysteryBoxAddress) {
         isneakerNFT = ISneakerNFT(_isneakerNFTAddress);
+        iMyysteryBox = IMysteryBox(_iMysteryBoxAddress);
     }
 
     //EVENT
@@ -103,7 +109,7 @@ contract Move2Earn is Ownable {
         return (allUserEnergy_[_user].energy, allUserEnergy_[_user].maxEnergy);
     }
 
-    function refillUserEnergy(address _user) external onlyOwner{
+    function refillUserEnergy(address _user) external onlyOwner {
         UserEnergy storage userEnergy = allUserEnergy_[_user];
         userEnergy.energy = userEnergy.maxEnergy;
     }
@@ -128,7 +134,10 @@ contract Move2Earn is Ownable {
 
         ISneakerNFT.Sneaker memory sneaker = isneakerNFT.getSneaker(_tokenId);
 
-        require( sneaker.hp > 20 && sneaker.durability >20, "Move2Earn: Sneaker is too damaged");
+        require(
+            sneaker.hp > 20 && sneaker.durability > 20,
+            "Move2Earn: Sneaker is too damaged"
+        );
 
         // speed coefficiency
         uint8 speedCoefficiency = 100;
@@ -179,6 +188,8 @@ contract Move2Earn is Ownable {
         }
         isneakerNFT.decaySneaker(_tokenId, energyUsed, energyUsed);
         allUserEnergy_[_msgSender()].energy -= energyUsed;
+
+        iMyysteryBox.mint(_msgSender());
     }
 
     function _rewardBySneakerType(Constants.SneakerType sneakerType)

@@ -123,6 +123,7 @@ contract Marketplace is Ownable {
         return addressToOfferIDs_[_nftAddress].length;
     }
 
+    // OfferId is NFT token id
     function makeOffer(
         uint256 _offerId,
         uint256 _price,
