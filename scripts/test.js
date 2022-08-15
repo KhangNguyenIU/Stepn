@@ -39,8 +39,8 @@ async function main() {
     marketplaceInstance = await (await ethers.getContractFactory('Marketplace')).attach(address.marketplace)
     move2EarnInstance = await (await ethers.getContractFactory('Move2Earn')).attach(address.move2Earn)
 
-    const msCount = await sneakerInstance.balanceOf(deployer.address)
-    console.log({msCount})
+   const sneaker = await sneakerInstance.getSneaker(1)
+   console.log(sneaker)
 }
 
 main()

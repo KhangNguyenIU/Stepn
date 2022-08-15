@@ -10,17 +10,26 @@ import Notification from './Components/Notification';
 import QRCodeModal from './Components/QRCodeModal';
 import { MoveContext } from './Context/MoveContext';
 import { QRCodeContext } from './Context/QRCode';
+import { WebsocketContext } from './Context/Websocket';
+
 
 function App() {
-    const { setCurrentAccount, setNotification } = useContext(MoveContext)
+    const { setCurrentAccount, setNotification, currentAccount } = useContext(MoveContext)
     const { getQRCode } = useContext(QRCodeContext)
+    const { client, onSendMessage} = useContext(WebsocketContext)
 
     useEffect(() => {
         window.ethereum.on('accountsChanged', function (account) {
             setCurrentAccount(account)
         })
-
     }, [])
+    
+    useEffect(()=>{
+        if(currentAccount){
+            // console.log("current account", currentAccount)
+            onSendMessage('sneakerNFT', "113521d4775b498450dad5738a0e6cbd83f67247")
+        }
+    },[currentAccount])
 
     return (
         <div className="App">

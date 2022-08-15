@@ -17,6 +17,7 @@ export default function GemList() {
   const [listNft, setListNft] = React.useState([]);
   const [combineInput, setCombineInput] = useState('');
 
+  console.log({gemList: listNft})
   useEffect(() => {
     if (currentAccount) {
       getGemsList();

@@ -6,15 +6,18 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { MoveProvider } from './Context/MoveContext';
 import { QRCodeProvider } from './Context/QRCode';
+import { WebsocketProvider } from './Context/Websocket';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
         <MoveProvider>
             <QRCodeProvider>
-                <BrowserRouter>
-                    <App />
-                </BrowserRouter>
+                <WebsocketProvider>
+                    <BrowserRouter>
+                        <App />
+                    </BrowserRouter>
+                </WebsocketProvider>
             </QRCodeProvider>
         </MoveProvider>
     </React.StrictMode>
